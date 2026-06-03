@@ -1,0 +1,1 @@
+-- Bookings seed placeholder (bookings are created dynamically by users)

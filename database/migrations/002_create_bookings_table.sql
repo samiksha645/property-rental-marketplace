@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS bookings (
+  id SERIAL PRIMARY KEY,
+  property_id INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+  guest_id INTEGER NOT NULL,
+  check_in_date DATE NOT NULL,
+  check_out_date DATE NOT NULL,
+  subtotal NUMERIC(10,2) NOT NULL,
+  cleaning_fee_charged NUMERIC(10,2) NOT NULL,
+  service_fee NUMERIC(10,2) NOT NULL,
+  total_amount NUMERIC(10,2) NOT NULL,
+  guest_count INTEGER NOT NULL,
+  special_requests TEXT,
+  payment_intent_id VARCHAR(255),
+  status VARCHAR(50) DEFAULT 'pending',
+  payment_status VARCHAR(50) DEFAULT 'unpaid',
+  cancelled_at TIMESTAMP,
+  cancellation_reason TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
