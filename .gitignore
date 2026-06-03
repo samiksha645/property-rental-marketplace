@@ -32,7 +32,7 @@ Thumbs.db
 .vscode/
 .idea/
 
-# cache
+# cache/temp files
 .cache/
 temp/
 tmp/
