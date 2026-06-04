@@ -1,21 +1,23 @@
 const { Pool } = require('pg');
 
+const connectionString = process.env.DATABASE_URL || '';
+const isLocal = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 20, // Maximum number of clients in the pool
+  connectionString: connectionString,
+  ssl: isLocal ? false : { rejectUnauthorized: false },
+  max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 10000,
 });
 
-// Test database connection
-pool.on('connect', () => {
-  console.log('✅ Database connected successfully');
-});
+// Removed repetitive pool connect logging as it fires for every single connection in the pool, 
+// creating log spam. Connection is verified once on startup in server.js instead.
 
 pool.on('error', (err) => {
-  console.error('❌ Unexpected database error:', err);
-  process.exit(-1);
+  console.error('⚠️ Unexpected error on idle database client:', err.message);
+  // Do NOT process.exit() here! Cloud databases (like Supabase) frequently close idle connections.
+  // The pg pool will automatically create a new client when a query is made.
 });
 
 // Wrapper for queries with error handling

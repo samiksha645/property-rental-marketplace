@@ -4,6 +4,12 @@ const { pool } = require('./src/config/database');
 
 const PORT = process.env.PORT || 5000;
 
+if (!process.env.DATABASE_URL) {
+  console.error('❌ FATAL ERROR: DATABASE_URL environment variable is missing.');
+  console.error('👉 If deploying to Render, please add DATABASE_URL to your Environment Variables.');
+  process.exit(1);
+}
+
 // Test DB Connection and Start Server
 async function startServer() {
   try {
