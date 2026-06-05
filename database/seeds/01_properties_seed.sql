@@ -24,8 +24,8 @@ INSERT INTO properties (
   'USA',
   40.7128,
   -74.0060,
-  ARRAY['Wifi', 'Air Conditioning', 'Kitchen', 'Gym', 'Elevator', 'Washing Machine'],
-  ARRAY['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80'],
+  '["Wifi", "Air Conditioning", "Kitchen", "Gym", "Elevator", "Washing Machine"]'::jsonb,
+  '["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80"]'::jsonb,
   true,
   true,
   'flexible'
@@ -50,14 +50,14 @@ INSERT INTO properties (
   'USA',
   47.6062,
   -122.3321,
-  ARRAY['Wifi', 'Kitchen', 'Heating', 'Free Parking', 'Dryer', 'Patio/Balcony', 'Dishwasher'],
-  ARRAY['https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=800&q=80'],
+  '["Wifi", "Kitchen", "Heating", "Free Parking", "Dryer", "Patio/Balcony", "Dishwasher"]'::jsonb,
+  '["https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=800&q=80"]'::jsonb,
   true,
   true,
   'moderate'
 ),
 (
-  2,
+  1,
   'Luxury Oceanfront Condo',
   'Wake up to the sound of waves in this spectacular beachfront condo. Features high-end finishes, direct beach access, an infinity pool, and a wrap-around balcony with panoramic ocean views. Fully furnished and equipped with premium amenities for an unforgettable stay.',
   'condo',
@@ -76,14 +76,14 @@ INSERT INTO properties (
   'USA',
   25.7617,
   -80.1918,
-  ARRAY['Wifi', 'Air Conditioning', 'Kitchen', 'Pool', 'Hot Tub', 'Beachfront', 'Elevator'],
-  ARRAY['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'],
+  '["Wifi", "Air Conditioning", "Kitchen", "Pool", "Hot Tub", "Beachfront", "Elevator"]'::jsonb,
+  '["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80"]'::jsonb,
   true,
   true,
   'strict'
 ),
 (
-  2,
+  1,
   'Cozy Loft Studio in Trendy District',
   'Stylish industrial loft studio in the artistic quarter. Featuring exposed brick walls, high ceilings, custom lighting, and clever space-saving furniture. Surrounded by art galleries, microbreweries, and trendy cafes. Ideal for couples or solo travelers.',
   'studio',
@@ -102,14 +102,14 @@ INSERT INTO properties (
   'USA',
   37.7749,
   -122.4194,
-  ARRAY['Wifi', 'Air Conditioning', 'Kitchen', 'Heating', 'Washing Machine'],
-  ARRAY['https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=800&q=80'],
+  '["Wifi", "Air Conditioning", "Kitchen", "Heating", "Washing Machine"]'::jsonb,
+  '["https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=800&q=80"]'::jsonb,
   false,
   true,
   'flexible'
 ),
 (
-  3,
+  1,
   'Elegant Historic Townhouse',
   'A classic brownstone townhouse combining historic charm with modern upgrades. Boasts high ceilings, original hardwood floors, updated bathrooms, and a modern dining area. Located in a beautiful tree-lined street close to historic landmarks and parks.',
   'townhouse',
@@ -128,9 +128,10 @@ INSERT INTO properties (
   'USA',
   42.3601,
   -71.0589,
-  ARRAY['Wifi', 'Heating', 'Kitchen', 'Dryer', 'Dishwasher', 'TV', 'Indoor Fireplace'],
-  ARRAY['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80'],
+  '["Wifi", "Heating", "Kitchen", "Dryer", "Dishwasher", "TV", "Indoor Fireplace"]'::jsonb,
+  '["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80"]'::jsonb,
   false,
   true,
   'moderate'
-);
+)
+ON CONFLICT DO NOTHING;

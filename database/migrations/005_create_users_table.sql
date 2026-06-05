@@ -7,29 +7,30 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert mock users for any existing landlords or guests to prevent foreign key errors
+-- Insert default admin user
+INSERT INTO users (id, name, email, role) VALUES (1, 'John Doe', 'admin@example.com', 'admin') ON CONFLICT (id) DO NOTHING;
+
+-- Insert mock users for any existing landlords to prevent FK errors
 INSERT INTO users (id, name, email, role)
 SELECT DISTINCT landlord_id, 'Landlord ' || landlord_id, 'landlord' || landlord_id || '@example.com', 'user'
 FROM properties
+WHERE landlord_id IS NOT NULL AND landlord_id != 1
 ON CONFLICT (id) DO NOTHING;
 
+-- Insert mock users for any existing guests to prevent FK errors
 INSERT INTO users (id, name, email, role)
 SELECT DISTINCT guest_id, 'Guest ' || guest_id, 'guest' || guest_id || '@example.com', 'user'
 FROM bookings
+WHERE guest_id IS NOT NULL AND guest_id != 1
 ON CONFLICT (id) DO NOTHING;
 
--- Also insert the default guest user
-INSERT INTO users (id, name, email, role) VALUES (1, 'John Doe', 'guest@example.com', 'admin') ON CONFLICT DO NOTHING;
-
--- Add foreign key constraints to properties and bookings
-ALTER TABLE properties 
-ADD CONSTRAINT fk_landlord 
-FOREIGN KEY (landlord_id) 
-REFERENCES users(id) 
-ON DELETE CASCADE;
-
-ALTER TABLE bookings 
-ADD CONSTRAINT fk_guest 
-FOREIGN KEY (guest_id) 
-REFERENCES users(id) 
-ON DELETE CASCADE;
+-- Add foreign key constraints (only if they don't already exist)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_landlord') THEN
+    ALTER TABLE properties ADD CONSTRAINT fk_landlord FOREIGN KEY (landlord_id) REFERENCES users(id) ON DELETE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_guest') THEN
+    ALTER TABLE bookings ADD CONSTRAINT fk_guest FOREIGN KEY (guest_id) REFERENCES users(id) ON DELETE CASCADE;
+  END IF;
+END $$;

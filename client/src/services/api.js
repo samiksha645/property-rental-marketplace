@@ -1,5 +1,7 @@
 // Base API configuration
-const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  'https://property-rental-marketplace-3wo7.onrender.com/api/v1';
 
 // Helper function for handling fetch responses
 const handleResponse = async (response) => {

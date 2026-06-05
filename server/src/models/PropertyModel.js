@@ -42,7 +42,10 @@ class PropertyModel {
       landlord_id, title, description, property_type, bedrooms, bathrooms,
       square_feet, max_guests, base_price_per_night, cleaning_fee || 0, security_deposit || 0,
       address_line1, address_line2, city, state, postal_code, country,
-      latitude, longitude, amenities || [], images || [], cancellation_policy || 'flexible',
+      latitude, longitude,
+      JSON.stringify(amenities || []),
+      JSON.stringify(images || []),
+      cancellation_policy || 'flexible',
     ];
 
     const result = await query(sql, values);
