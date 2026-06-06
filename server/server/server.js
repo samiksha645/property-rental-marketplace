@@ -8,7 +8,7 @@ const propertyRoutes = require('./src/routes/propertyRoutes');
 const bookingRoutes = require('./src/routes/bookingRoutes');
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 // Security middleware
 app.use(helmet({
@@ -17,6 +17,7 @@ app.use(helmet({
 
 // CORS
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // Logging
 if (process.env.NODE_ENV === 'development') {

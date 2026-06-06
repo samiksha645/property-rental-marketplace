@@ -1,11 +1,10 @@
 // Allowed origins — supports multiple origins so CORS never breaks
 // regardless of which port Vite picks (5173, 5174, etc.)
 const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:5175',
-  'http://127.0.0.1:5173',
-  'http://127.0.0.1:5174',
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5173",
+  "https://property-rental-market.onrender.com"
 ];
 
 // If a custom origin is set via env, add it too (for production deployments)

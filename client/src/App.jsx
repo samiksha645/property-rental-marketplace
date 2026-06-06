@@ -1,17 +1,162 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { propertyService, isOnline, checkServerHealth } from './services/api.js';
 import PropertyGrid from './components/property/PropertyGrid.jsx';
 import BookingForm from './components/booking/BookingForm.jsx';
-import AdminPanel from './components/admin/AdminPanel.jsx';
 import AddPropertyForm from './components/property/AddPropertyForm.jsx';
+import Login from './pages/Login.jsx';
+import Register from './pages/Register.jsx';
+import Dashboard from './pages/admin/Dashboard.jsx';
+import Users from './pages/admin/Users.jsx';
+import Properties from './pages/admin/Properties.jsx';
+import Bookings from './pages/admin/Bookings.jsx';
 import './assets/css/pages/homepage.css';
 
-const App = () => {
+// Protected Route component
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="spinner"></div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  return children;
+};
+
+// Admin Route component
+const AdminRoute = ({ children }) => {
+  const { isAuthenticated, isAdmin, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="spinner"></div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  if (!isAdmin()) {
+    return <Navigate to="/" />;
+  }
+
+  return children;
+};
+
+// Header component
+const Header = ({ user, isAuthenticated, onLoginClick, onRegisterClick, onLogoutClick, isAdminUser }) => (
+  <header className="app-header">
+    <div className="container">
+      <div className="header-content">
+        <div className="logo" onClick={() => window.location.href = '/'}>
+          🏡 RentalMarketplace
+        </div>
+        
+        <div className="header-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          {isAuthenticated ? (
+            <>
+              {isAdminUser && (
+                <a 
+                  href="/admin" 
+                  style={{
+                    background: 'none',
+                    border: '1px solid #ff385c',
+                    color: '#ff385c',
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  ⚙️ Admin Panel
+                </a>
+              )}
+              <span style={{ color: '#666', fontSize: '14px' }}>
+                Hello, {user?.name}
+              </span>
+              <button 
+                onClick={onLogoutClick}
+                style={{
+                  background: '#fee2e2',
+                  border: 'none',
+                  color: '#dc2626',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                onClick={onLoginClick}
+                style={{
+                  background: 'none',
+                  border: '1px solid #667eea',
+                  color: '#667eea',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Login
+              </button>
+              <button 
+                onClick={onRegisterClick}
+                style={{
+                  background: '#667eea',
+                  border: 'none',
+                  color: 'white',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Sign Up
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  </header>
+);
+
+// Main App Content
+const AppContent = () => {
+  const { user, isAuthenticated, isAdmin, logout, loading: authLoading } = useAuth();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedProperty, setSelectedProperty] = useState(null);
-  const [view, setView] = useState('listings'); // 'listings', 'details', 'add'
+  const [view, setView] = useState('listings');
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     city: '',
@@ -42,7 +187,7 @@ const App = () => {
     };
 
     checkStatus();
-    const interval = setInterval(checkStatus, 30000); // Check every 30 seconds
+    const interval = setInterval(checkStatus, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -61,7 +206,6 @@ const App = () => {
     if (searchTerm) {
       result = await propertyService.searchProperties(searchTerm);
     } else {
-      // Apply filters
       const activeFilters = {};
       if (filters.city) activeFilters.city = filters.city;
       if (filters.property_type) activeFilters.property_type = filters.property_type;
@@ -140,6 +284,19 @@ const App = () => {
     setSearchTerm('');
   };
 
+  const handleLoginClick = () => {
+    window.location.href = '/login';
+  };
+
+  const handleRegisterClick = () => {
+    window.location.href = '/register';
+  };
+
+  const handleLogoutClick = async () => {
+    await logout();
+    window.location.href = '/';
+  };
+
   // Render property details view
   const renderPropertyDetails = () => {
     if (!selectedProperty) return null;
@@ -193,14 +350,14 @@ const App = () => {
                 </div>
               )}
             </div>
-          </div>
-          
-          <div className="property-details-sidebar">
-            <BookingForm
-              property={selectedProperty}
-              onBookingSuccess={handleBookingSuccess}
-              onBookingError={handleBookingError}
-            />
+            
+            <div className="property-details-sidebar">
+              <BookingForm
+                property={selectedProperty}
+                onBookingSuccess={handleBookingSuccess}
+                onBookingError={handleBookingError}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -315,48 +472,68 @@ const App = () => {
     );
   };
 
+  if (authLoading) {
+    return (
+      <div className="loading-screen">
+        <div className="spinner"></div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
-      <header className="app-header">
-        <div className="container">
-          <div className="header-content">
-            <div className="logo" onClick={() => setView('listings')}>
-              🏡 RentalMarketplace
-            </div>
-            
-            <div className="header-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <button 
-                className="admin-panel-btn" 
-                onClick={() => setView(view === 'admin' ? 'listings' : 'admin')}
-                style={{
-                  background: 'none',
-                  border: '1px solid #ff385c',
-                  color: '#ff385c',
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                {view === 'admin' ? 'View Site' : '⚙️ Admin Panel'}
-              </button>
-              {view === 'listings' && (
-                <button className="add-property-btn" onClick={handleAddProperty}>
-                  + List Your Property
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {view === 'listings' && renderListings()}
-      {view === 'details' && renderPropertyDetails()}
-      {view === 'add' && renderAddProperty()}
-      {view === 'admin' && <AdminPanel onBack={() => setView('listings')} />}
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/admin" element={
+          <AdminRoute>
+            <Dashboard />
+          </AdminRoute>
+        } />
+        <Route path="/admin/users" element={
+          <AdminRoute>
+            <Users />
+          </AdminRoute>
+        } />
+        <Route path="/admin/properties" element={
+          <AdminRoute>
+            <Properties />
+          </AdminRoute>
+        } />
+        <Route path="/admin/bookings" element={
+          <AdminRoute>
+            <Bookings />
+          </AdminRoute>
+        } />
+        <Route path="/" element={
+          <>
+            <Header 
+              user={user}
+              isAuthenticated={isAuthenticated}
+              onLoginClick={handleLoginClick}
+              onRegisterClick={handleRegisterClick}
+              onLogoutClick={handleLogoutClick}
+              isAdminUser={isAdmin()}
+            />
+            {view === 'listings' && renderListings()}
+            {view === 'details' && renderPropertyDetails()}
+            {view === 'add' && renderAddProperty()}
+          </>
+        } />
+      </Routes>
     </div>
+  );
+};
+
+// Main App component
+const App = () => {
+  return (
+    <Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Router>
   );
 };
 
