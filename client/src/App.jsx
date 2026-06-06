@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { propertyService, isOnline, checkServerHealth } from './services/api.js';
 import PropertyGrid from './components/property/PropertyGrid.jsx';
@@ -58,7 +58,7 @@ const AdminRoute = ({ children }) => {
 };
 
 // Header component
-const Header = ({ user, isAuthenticated, onLoginClick, onRegisterClick, onLogoutClick, isAdminUser }) => (
+const Header = ({ user, isAuthenticated, onLoginClick, onRegisterClick, onLogoutClick, isAdminUser, navigate }) => (
   <header className="app-header">
     <div className="container">
       <div className="header-content">
@@ -284,17 +284,19 @@ const AppContent = () => {
     setSearchTerm('');
   };
 
+  const navigate = useNavigate();
+
   const handleLoginClick = () => {
-    window.location.href = '/login';
+    navigate('/login');
   };
 
   const handleRegisterClick = () => {
-    window.location.href = '/register';
+    navigate('/register');
   };
 
   const handleLogoutClick = async () => {
     await logout();
-    window.location.href = '/';
+    navigate('/');
   };
 
   // Render property details view
