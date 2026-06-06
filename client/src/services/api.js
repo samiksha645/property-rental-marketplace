@@ -1,7 +1,21 @@
-// Base API configuration
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  'https://property-rental-marketplace-3wo7.onrender.com/api/v1';
+// Base API configuration - supports local development and production
+// For development: http://localhost:5000/api/v1
+// For production: Render or other cloud provider
+const getAPIBaseURL = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  
+  // Auto-detect local development
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return 'http://localhost:5000/api/v1';
+  }
+  
+  // Production URL as fallback
+  return 'https://property-rental-marketplace-3wo7.onrender.com/api/v1';
+};
+
+const API_BASE_URL = getAPIBaseURL();
 
 // Helper function for handling fetch responses
 const handleResponse = async (response) => {

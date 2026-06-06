@@ -1,7 +1,29 @@
--- Master Migration: Complete Database Schema
--- Run this to set up the entire database from scratch
--- This replaces having to run individual migrations
+#!/bin/bash
+# Database setup script for property rental marketplace
+# This script sets up the PostgreSQL database from scratch
 
+set -e
+
+# Color output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo -e "${YELLOW}🚀 Property Rental Marketplace - Database Setup${NC}"
+echo "=================================================="
+
+# Check if DATABASE_URL is set
+if [ -z "$DATABASE_URL" ]; then
+    echo -e "${RED}❌ ERROR: DATABASE_URL environment variable not set${NC}"
+    echo "Please set DATABASE_URL and try again"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ DATABASE_URL found${NC}"
+
+# Create a temporary SQL file with all migrations combined
+cat > /tmp/migrations.sql << 'EOF'
 -- Drop existing objects to start fresh
 DROP SCHEMA IF EXISTS public CASCADE;
 CREATE SCHEMA public;
@@ -130,3 +152,24 @@ VALUES (
     CURRENT_TIMESTAMP
 )
 ON CONFLICT (email) DO NOTHING;
+EOF
+
+echo -e "${YELLOW}📦 Running database migrations...${NC}"
+
+# Execute the migrations
+psql "$DATABASE_URL" -f /tmp/migrations.sql
+
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✅ Database setup completed successfully${NC}"
+    echo ""
+    echo -e "${GREEN}📝 Default Admin Credentials:${NC}"
+    echo "   Email: admin@rentalmarketplace.com"
+    echo "   Password: admin123"
+    echo ""
+    echo -e "${YELLOW}⚠️  IMPORTANT: Change these credentials in production!${NC}"
+    rm /tmp/migrations.sql
+else
+    echo -e "${RED}❌ Database setup failed${NC}"
+    rm /tmp/migrations.sql
+    exit 1
+fi

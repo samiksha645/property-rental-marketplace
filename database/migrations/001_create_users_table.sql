@@ -1,10 +1,14 @@
--- Migration: Create users table for authentication system
+-- Migration 001: Create users table for authentication system
 -- Created: 2026-06-06
+-- This migration creates the core users table with all necessary columns
 
--- Create users table
-CREATE TABLE IF NOT EXISTS users (
+-- Drop table if exists and recreate to ensure clean state
+DROP TABLE IF EXISTS users CASCADE;
+
+-- Create users table with complete schema
+CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
@@ -17,37 +21,38 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create index on email for faster lookups
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+-- Create indexes for performance
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_role ON users(role);
+CREATE INDEX idx_users_created_at ON users(created_at);
 
--- Create index on role for admin queries
-CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
-
--- Create index on created_at for sorting
-CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
-
--- Function to update updated_at timestamp
+-- Create function for updating timestamps
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE 'plpgsql';
 
--- Trigger to auto-update updated_at
-DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+-- Create trigger for updating updated_at
 CREATE TRIGGER update_users_updated_at
     BEFORE UPDATE ON users
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Add foreign key to bookings table for guest_id
--- Note: This assumes guest_id in bookings references users.id
--- If bookings table already exists, run this:
-ALTER TABLE bookings 
-ADD CONSTRAINT fk_bookings_guest 
-FOREIGN KEY (guest_id) REFERENCES users(id) ON DELETE SET NULL;
+-- Insert default admin user
+INSERT INTO users (name, email, password, role, is_email_verified, created_at, updated_at)
+VALUES (
+    'Admin User',
+    'admin@rentalmarketplace.com',
+    '$2b$12$LUIuhL0FLhF8q7MqQ3W7h.vZ9KxJLxJxJxJxJxJxJxJxJxJxJxJxJ',
+    'admin',
+    true,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+)
+ON CONFLICT (email) DO NOTHING;
 
 -- Add foreign key to properties table for landlord_id
 -- Note: This assumes landlord_id in properties references users.id

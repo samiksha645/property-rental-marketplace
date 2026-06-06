@@ -1,7 +1,11 @@
--- Master Migration: Complete Database Schema
--- Run this to set up the entire database from scratch
--- This replaces having to run individual migrations
+#!/usr/bin/env node
+// Database setup script for Windows/Node.js
+// Run: node database/setup-db.js
 
+require('dotenv').config();
+const { Pool } = require('pg');
+
+const schema = `
 -- Drop existing objects to start fresh
 DROP SCHEMA IF EXISTS public CASCADE;
 CREATE SCHEMA public;
@@ -84,39 +88,24 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
--- Create indexes for users
+-- Create indexes
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_users_created_at ON users(created_at);
-
--- Create indexes for properties
 CREATE INDEX idx_properties_city ON properties(city);
 CREATE INDEX idx_properties_property_type ON properties(property_type);
 CREATE INDEX idx_properties_price ON properties(base_price_per_night);
 CREATE INDEX idx_properties_featured ON properties(is_featured) WHERE is_featured = TRUE;
 CREATE INDEX idx_properties_active ON properties(is_active) WHERE is_active = TRUE;
 CREATE INDEX idx_properties_landlord ON properties(landlord_id);
-
--- Create indexes for bookings
 CREATE INDEX idx_bookings_property_id ON bookings(property_id);
 CREATE INDEX idx_bookings_guest_id ON bookings(guest_id);
 CREATE INDEX idx_bookings_dates ON bookings(check_in_date, check_out_date);
 
--- Create triggers for updated_at columns
-CREATE TRIGGER update_users_updated_at
-    BEFORE UPDATE ON users
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_properties_updated_at
-    BEFORE UPDATE ON properties
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_bookings_updated_at
-    BEFORE UPDATE ON bookings
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+-- Create triggers
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_properties_updated_at BEFORE UPDATE ON properties FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_bookings_updated_at BEFORE UPDATE ON bookings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Insert default admin user
 INSERT INTO users (name, email, password, role, is_email_verified, created_at, updated_at)
@@ -130,3 +119,38 @@ VALUES (
     CURRENT_TIMESTAMP
 )
 ON CONFLICT (email) DO NOTHING;
+`;
+
+async function setupDatabase() {
+  const connectionString = process.env.DATABASE_URL;
+  
+  if (!connectionString) {
+    console.error('❌ ERROR: DATABASE_URL environment variable not set');
+    process.exit(1);
+  }
+
+  const pgPool = new Pool({ connectionString });
+  
+  try {
+    console.log('🚀 Setting up database...');
+    
+    await pgPool.query(schema);
+    
+    console.log('✅ Database setup completed successfully');
+    console.log('');
+    console.log('📝 Default Admin Credentials:');
+    console.log('   Email: admin@rentalmarketplace.com');
+    console.log('   Password: admin123');
+    console.log('');
+    console.log('⚠️  IMPORTANT: Change these credentials in production!');
+    
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Database setup failed:', error.message);
+    process.exit(1);
+  } finally {
+    await pgPool.end();
+  }
+}
+
+setupDatabase();

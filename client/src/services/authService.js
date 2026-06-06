@@ -1,5 +1,12 @@
-// Auth API Service
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://property-rental-marketplace-3wo7.onrender.com/api/v1';
+// Auth API Service - supports local and production environments
+const getAPIBaseURL = () => {
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return 'http://localhost:5000/api/v1';
+  }
+  return 'https://property-rental-marketplace-3wo7.onrender.com/api/v1';
+};
+
+const API_BASE_URL = getAPIBaseURL();
 
 // Helper function for handling fetch responses
 const handleResponse = async (response) => {
