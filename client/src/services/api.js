@@ -5,6 +5,9 @@ const getAPIBaseURL = () => {
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
   
   // Auto-detect local development
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {

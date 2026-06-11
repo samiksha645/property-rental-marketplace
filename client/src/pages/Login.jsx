@@ -8,7 +8,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, isAdmin } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -20,8 +20,9 @@ const Login = () => {
       const result = await login(email, password);
       
       if (result.success) {
-        // Redirect admin users to admin dashboard
-        if (isAdmin()) {
+        // Get user role from result directly (not from state because state hasn't updated yet)
+        const userRole = result.user?.role;
+        if (userRole === 'admin') {
           navigate('/admin');
         } else {
           navigate('/');

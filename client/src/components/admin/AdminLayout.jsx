@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './AdminLayout.css';
 
@@ -9,8 +9,7 @@ const AdminLayout = ({ children }) => {
 
   // Redirect non-admin users
   if (!isAdmin()) {
-    navigate('/');
-    return null;
+    return <Navigate to="/" replace />;
   }
 
   const handleLogout = async () => {

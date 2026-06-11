@@ -1,6 +1,6 @@
 require('dotenv').config();
 const app = require('./src/app');
-const { pool } = require('./src/config/database');
+const { pool, query } = require('./src/config/database');
 const bcrypt = require('bcryptjs');
 
 const PORT = process.env.PORT || 5000;
@@ -14,28 +14,61 @@ if (!process.env.DATABASE_URL) {
 // Initialize Default Admin User
 async function initializeAdminUser() {
   try {
-    const hashedPassword = await bcrypt.hash('admin123', 12);
+    const adminEmail = 'admin@rentalmarketplace.com';
+    const adminPassword = 'admin123';
     
-    const query = `
+    // Hash password fresh
+    const salt = await bcrypt.genSalt(12);
+    const hashedPassword = await bcrypt.hash(adminPassword, salt);
+
+    // Upsert admin user - update password if exists, insert if not
+    const upsertSql = `
       INSERT INTO users (name, email, password, role, is_active, is_email_verified)
-      VALUES ($1, $2, $3, $4, true, true)
-      ON CONFLICT (email) DO NOTHING;
+      VALUES ($1, $2, $3, 'admin', true, true)
+      ON CONFLICT (email) 
+      DO UPDATE SET 
+        password = CASE 
+          WHEN users.password IS NULL OR users.password = '' THEN $3
+          ELSE $3
+        END,
+        is_active = true,
+        is_email_verified = true,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING id, name, email, role;
     `;
     
-    const result = await pool.query(query, [
+    const result = await query(upsertSql, [
       'Admin User',
-      'admin@rentalmarketplace.com',
+      adminEmail,
       hashedPassword,
-      'admin'
     ]);
     
-    if (result.rowCount > 0) {
-      console.log('✅ Default admin user created successfully');
+    // Verify the password was stored correctly by reading it back
+    const verifySql = `SELECT id, email, password, role FROM users WHERE email = $1`;
+    const verifyResult = await query(verifySql, [adminEmail]);
+    
+    if (verifyResult.rows.length > 0) {
+      const storedUser = verifyResult.rows[0];
+      // Verify bcrypt hash works
+      const isValid = await bcrypt.compare(adminPassword, storedUser.password);
+      
+      if (isValid) {
+        console.log(`✅ Admin user ready: ${storedUser.email} (role: ${storedUser.role}, id: ${storedUser.id})`);
+        console.log(`   Password hash verification: PASSED`);
+      } else {
+        console.error(`❌ Admin password hash VERIFICATION FAILED!`);
+        // Force update with a known working hash
+        const newSalt = await bcrypt.genSalt(12);
+        const newHash = await bcrypt.hash(adminPassword, newSalt);
+        await query(`UPDATE users SET password = $1 WHERE email = $2`, [newHash, adminEmail]);
+        console.log(`   Hash forcefully updated.`);
+      }
     } else {
-      console.log('ℹ️  Admin user already exists');
+      console.error(`❌ Admin user creation FAILED - user not found after insert.`);
     }
   } catch (err) {
     console.error('⚠️  Admin user initialization error:', err.message);
+    console.error(err.stack);
     // Don't fail startup if admin creation fails
   }
 }
@@ -52,9 +85,12 @@ async function startServer() {
 
     app.listen(PORT, () => {
       console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+      console.log(`🔗 API Base URL: http://localhost:${PORT}/api/v1`);
+      console.log(`🔗 Health Check: http://localhost:${PORT}/health`);
     });
   } catch (error) {
     console.error('❌ Failed to connect to the database or start the server:', error.message);
+    console.error(error.stack);
     process.exit(1);
   }
 }

@@ -87,8 +87,12 @@ const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
+    // Debug logging
+    console.log(`🔐 Login attempt for email: ${email}`);
+
     // Validation
     if (!email || !password) {
+      console.log(`❌ Login failed: Missing email or password`);
       return res.status(400).json({
         success: false,
         message: 'Email and password are required',
@@ -98,14 +102,18 @@ const login = async (req, res, next) => {
     // Find user by email
     const user = await UserModel.findByEmail(email);
     if (!user) {
+      console.log(`❌ Login failed: User not found for email: ${email}`);
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
       });
     }
 
+    console.log(`✅ User found: id=${user.id}, email=${user.email}, role=${user.role}, hasPassword=${!!user.password}`);
+
     // Check if user is active
     if (!user.is_active) {
+      console.log(`❌ Login failed: Account deactivated for user: ${email}`);
       return res.status(401).json({
         success: false,
         message: 'Account is deactivated. Please contact support.',
@@ -114,18 +122,28 @@ const login = async (req, res, next) => {
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    
     if (!isPasswordValid) {
+      console.log(`❌ Login failed: Invalid password for email: ${email}`);
+      console.log(`   Password from request: ${password ? 'provided' : 'missing'}`);
+      console.log(`   Stored password hash: ${user.password ? user.password.substring(0, 20) + '...' : 'MISSING!'}`);
+      // Debug: re-hash to test
+      const testHash = await bcrypt.hash(password, 12);
+      console.log(`   Test hash of provided pwd: ${testHash.substring(0, 20)}...`);
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
       });
     }
 
+    console.log(`✅ Password verification: PASSED`);
+
     // Update last login
     await UserModel.updateLastLogin(user.id);
 
     // Generate token
     const token = generateToken(user);
+    console.log(`✅ JWT generated successfully for user ${user.id} with role: ${user.role}`);
 
     res.status(200).json({
       success: true,
@@ -142,6 +160,7 @@ const login = async (req, res, next) => {
       message: 'Login successful',
     });
   } catch (error) {
+    console.error(`❌ Login error:`, error);
     next(error);
   }
 };

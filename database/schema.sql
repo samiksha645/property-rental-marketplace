@@ -1,13 +1,9 @@
 -- Master Migration: Complete Database Schema
--- Run this to set up the entire database from scratch
--- This replaces having to run individual migrations
-
--- Drop existing objects to start fresh
-DROP SCHEMA IF EXISTS public CASCADE;
-CREATE SCHEMA public;
+-- This is SAFE to run multiple times (idempotent)
+-- Uses CREATE IF NOT EXISTS / DO blocks to avoid errors on re-run
 
 -- Create users table
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -23,7 +19,7 @@ CREATE TABLE users (
 );
 
 -- Create properties table
-CREATE TABLE properties (
+CREATE TABLE IF NOT EXISTS properties (
   id SERIAL PRIMARY KEY,
   landlord_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   title VARCHAR(255) NOT NULL,
@@ -54,7 +50,7 @@ CREATE TABLE properties (
 );
 
 -- Create bookings table
-CREATE TABLE bookings (
+CREATE TABLE IF NOT EXISTS bookings (
   id SERIAL PRIMARY KEY,
   property_id INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
   guest_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -75,7 +71,7 @@ CREATE TABLE bookings (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create function for updating timestamps
+-- Create or replace function for updating timestamps
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -84,49 +80,40 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
--- Create indexes for users
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_role ON users(role);
-CREATE INDEX idx_users_created_at ON users(created_at);
+-- Create indexes (IF NOT EXISTS)
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
+CREATE INDEX IF NOT EXISTS idx_properties_city ON properties(city);
+CREATE INDEX IF NOT EXISTS idx_properties_property_type ON properties(property_type);
+CREATE INDEX IF NOT EXISTS idx_properties_price ON properties(base_price_per_night);
+CREATE INDEX IF NOT EXISTS idx_properties_featured ON properties(is_featured) WHERE is_featured = TRUE;
+CREATE INDEX IF NOT EXISTS idx_properties_active ON properties(is_active) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_properties_landlord ON properties(landlord_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_property_id ON bookings(property_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_guest_id ON bookings(guest_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_dates ON bookings(check_in_date, check_out_date);
 
--- Create indexes for properties
-CREATE INDEX idx_properties_city ON properties(city);
-CREATE INDEX idx_properties_property_type ON properties(property_type);
-CREATE INDEX idx_properties_price ON properties(base_price_per_night);
-CREATE INDEX idx_properties_featured ON properties(is_featured) WHERE is_featured = TRUE;
-CREATE INDEX idx_properties_active ON properties(is_active) WHERE is_active = TRUE;
-CREATE INDEX idx_properties_landlord ON properties(landlord_id);
-
--- Create indexes for bookings
-CREATE INDEX idx_bookings_property_id ON bookings(property_id);
-CREATE INDEX idx_bookings_guest_id ON bookings(guest_id);
-CREATE INDEX idx_bookings_dates ON bookings(check_in_date, check_out_date);
-
--- Create triggers for updated_at columns
-CREATE TRIGGER update_users_updated_at
-    BEFORE UPDATE ON users
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_properties_updated_at
-    BEFORE UPDATE ON properties
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_bookings_updated_at
-    BEFORE UPDATE ON bookings
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- Insert default admin user
-INSERT INTO users (name, email, password, role, is_email_verified, created_at, updated_at)
-VALUES (
-    'Admin User',
-    'admin@rentalmarketplace.com',
-    '$2b$12$LUIuhL0FLhF8q7MqQ3W7h.vZ9KxJLxJxJxJxJxJxJxJxJxJxJxJxJ',
-    'admin',
-    true,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-)
-ON CONFLICT (email) DO NOTHING;
+-- Create triggers (only if they don't exist)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_users_updated_at') THEN
+        CREATE TRIGGER update_users_updated_at
+            BEFORE UPDATE ON users
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_properties_updated_at') THEN
+        CREATE TRIGGER update_properties_updated_at
+            BEFORE UPDATE ON properties
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_bookings_updated_at') THEN
+        CREATE TRIGGER update_bookings_updated_at
+            BEFORE UPDATE ON bookings
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END
+$$;
