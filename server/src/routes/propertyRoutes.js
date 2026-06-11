@@ -15,7 +15,8 @@ const {
 router.get('/', getAllProperties);
 router.get('/search', searchProperties);
 router.get('/featured', getFeaturedProperties);
-router.get('/:id', getPropertyById);
+router.get('/by-city', require('../controllers/propertyController').getPropertiesByCity);
+router.get('/:id', require('../middleware/auth').optionalAuthMiddleware, require('../controllers/propertyController').getPropertyById);
 
 // Protected routes (require authentication)
 router.post('/', authMiddleware, createProperty);

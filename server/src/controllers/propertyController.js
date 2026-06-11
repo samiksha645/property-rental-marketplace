@@ -1,48 +1,38 @@
 const PropertyModel = require('../models/PropertyModel');
 const BookingModel = require('../models/BookingModel');
+const WishlistModel = require('../models/WishlistModel');
+const ReviewModel = require('../models/ReviewModel');
 
 // Get all properties with filters
 const getAllProperties = async (req, res, next) => {
   try {
     const {
-      page = 1,
-      limit = 20,
-      city,
-      state,
-      property_type,
-      min_price,
-      max_price,
-      bedrooms,
-      max_guests,
-      is_featured,
-      sort_by,
-      sort_order,
+      page = 1, limit = 20, city, state, locality, property_type,
+      category_id, min_rent, max_rent, bedrooms, bathrooms,
+      furnishing, parking, pet_friendly, is_verified, is_featured,
+      sort_by, sort_order, owner_id
     } = req.query;
 
-    const filters = {
-      city,
-      state,
-      property_type,
-      min_price: min_price ? parseFloat(min_price) : null,
-      max_price: max_price ? parseFloat(max_price) : null,
-      bedrooms: bedrooms ? parseInt(bedrooms) : null,
-      max_guests: max_guests ? parseInt(max_guests) : null,
-      is_featured: is_featured === 'true' ? true : is_featured === 'false' ? false : undefined,
-      is_active: true,
-      sort_by,
-      sort_order,
-    };
+    const filters = {};
+    if (city) filters.city = city;
+    if (state) filters.state = state;
+    if (locality) filters.locality = locality;
+    if (property_type) filters.property_type = property_type;
+    if (category_id) filters.category_id = parseInt(category_id);
+    if (min_rent) filters.min_rent = parseFloat(min_rent);
+    if (max_rent) filters.max_rent = parseFloat(max_rent);
+    if (bedrooms) filters.bedrooms = parseInt(bedrooms);
+    if (bathrooms) filters.bathrooms = parseFloat(bathrooms);
+    if (furnishing) filters.furnishing = furnishing;
+    if (parking) filters.parking = parking;
+    if (pet_friendly) filters.pet_friendly = pet_friendly;
+    if (is_verified) filters.is_verified = is_verified;
+    if (is_featured) filters.is_featured = is_featured;
+    if (owner_id) filters.owner_id = parseInt(owner_id);
+    if (sort_by) filters.sort_by = sort_by;
+    if (sort_order) filters.sort_order = sort_order;
 
-    // Remove null/undefined filters
-    Object.keys(filters).forEach(key => 
-      filters[key] === null || filters[key] === undefined ? delete filters[key] : null
-    );
-
-    const result = await PropertyModel.findAll(
-      filters,
-      parseInt(page),
-      parseInt(limit)
-    );
+    const result = await PropertyModel.findAll(filters, parseInt(page), parseInt(limit));
 
     res.status(200).json({
       success: true,
@@ -79,7 +69,7 @@ const searchProperties = async (req, res, next) => {
   }
 };
 
-// Get single property by ID with availability check
+// Get single property by ID
 const getPropertyById = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -92,18 +82,34 @@ const getPropertyById = async (req, res, next) => {
       });
     }
 
-    // Get upcoming bookings to show blocked dates
-    const upcomingBookings = await BookingModel.getUpcomingBookings(id);
-    const blockedDates = upcomingBookings.map(booking => ({
-      start: booking.check_in_date,
-      end: booking.check_out_date,
-    }));
+    // Get availability
+    const available = true; // Will be checked per booking
+    
+    // Get wishlist status if user is authenticated
+    let is_wishlisted = false;
+    if (req.user) {
+      is_wishlisted = await WishlistModel.isWishlisted(req.user.id, id);
+    }
+
+    // Get reviews
+    const reviews = await ReviewModel.findByPropertyId(id);
+    const ratingData = await ReviewModel.getAverageRating(id);
+
+    // Get wishlist count
+    const { query } = require('../config/database');
+    const wishlistCount = await query(
+      'SELECT COUNT(*) as count FROM wishlist WHERE property_id = $1', [id]
+    );
 
     res.status(200).json({
       success: true,
       data: {
         ...property,
-        blocked_dates: blockedDates,
+        is_wishlisted,
+        wishlist_count: parseInt(wishlistCount.rows[0].count),
+        reviews: reviews.data,
+        rating: ratingData,
+        available,
       },
     });
   } catch (error) {
@@ -114,23 +120,22 @@ const getPropertyById = async (req, res, next) => {
 // Create new property
 const createProperty = async (req, res, next) => {
   try {
-    // In production, get landlord_id from authenticated user
-    const landlord_id = req.user?.id || req.body.landlord_id;
+    const owner_id = req.user?.id;
     
-    if (!landlord_id) {
+    if (!owner_id) {
       return res.status(401).json({
         success: false,
         message: 'Authentication required',
       });
     }
 
-    const propertyData = { ...req.body, landlord_id };
+    const propertyData = { ...req.body, owner_id };
     const newProperty = await PropertyModel.create(propertyData);
     
     res.status(201).json({
       success: true,
       data: newProperty,
-      message: 'Property created successfully',
+      message: 'Property listed successfully',
     });
   } catch (error) {
     next(error);
@@ -150,9 +155,8 @@ const updateProperty = async (req, res, next) => {
       });
     }
 
-    // Check authorization (in production, verify landlord_id matches authenticated user)
-    const landlord_id = req.user?.id;
-    if (landlord_id && property.landlord_id !== landlord_id) {
+    const owner_id = req.user?.id;
+    if (owner_id && property.owner_id !== owner_id) {
       return res.status(403).json({
         success: false,
         message: 'Unauthorized to update this property',
@@ -184,9 +188,8 @@ const deleteProperty = async (req, res, next) => {
       });
     }
 
-    // Check authorization
-    const landlord_id = req.user?.id;
-    if (landlord_id && property.landlord_id !== landlord_id) {
+    const owner_id = req.user?.id;
+    if (owner_id && property.owner_id !== owner_id) {
       return res.status(403).json({
         success: false,
         message: 'Unauthorized to delete this property',
@@ -207,9 +210,9 @@ const deleteProperty = async (req, res, next) => {
 // Get featured properties
 const getFeaturedProperties = async (req, res, next) => {
   try {
-    const { limit = 6 } = req.query;
+    const { limit = 8 } = req.query;
     const result = await PropertyModel.findAll(
-      { is_featured: true, is_active: true },
+      { is_featured: 'true' },
       1,
       parseInt(limit)
     );
@@ -217,6 +220,73 @@ const getFeaturedProperties = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: result.data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get properties by city for popular cities section
+const getPropertiesByCity = async (req, res, next) => {
+  try {
+    const { city, limit = 4 } = req.query;
+    if (!city) {
+      return res.status(400).json({ success: false, message: 'City parameter required' });
+    }
+
+    const result = await PropertyModel.findAll({ city }, 1, parseInt(limit));
+    
+    res.status(200).json({
+      success: true,
+      data: result.data,
+      city,
+      count: result.pagination.total,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get all cities with property counts
+const getCities = async (req, res, next) => {
+  try {
+    const { query } = require('../config/database');
+    const result = await query(`
+      SELECT c.*, 
+        COUNT(p.id) as total_properties
+      FROM cities c
+      LEFT JOIN properties p ON p.city_id = c.id AND p.is_active = true
+      WHERE c.is_active = true
+      GROUP BY c.id
+      ORDER BY c.is_popular DESC, total_properties DESC
+    `);
+    
+    res.status(200).json({
+      success: true,
+      data: result.rows,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get all categories
+const getCategories = async (req, res, next) => {
+  try {
+    const { query } = require('../config/database');
+    const result = await query(`
+      SELECT cat.*, 
+        COUNT(p.id) as total_properties
+      FROM categories cat
+      LEFT JOIN properties p ON p.category_id = cat.id AND p.is_active = true
+      WHERE cat.is_active = true
+      GROUP BY cat.id
+      ORDER BY cat.sort_order ASC
+    `);
+    
+    res.status(200).json({
+      success: true,
+      data: result.rows,
     });
   } catch (error) {
     next(error);
@@ -231,4 +301,7 @@ module.exports = {
   updateProperty,
   deleteProperty,
   getFeaturedProperties,
+  getPropertiesByCity,
+  getCities,
+  getCategories,
 };

@@ -1,6 +1,7 @@
 const UserModel = require('../models/UserModel');
 const PropertyModel = require('../models/PropertyModel');
 const BookingModel = require('../models/BookingModel');
+const { query } = require('../config/database');
 
 // Get dashboard statistics
 const getDashboardStats = async (req, res, next) => {
@@ -9,21 +10,18 @@ const getDashboardStats = async (req, res, next) => {
     const userStats = await UserModel.getStats();
 
     // Get property stats
-    const propertyStats = await PropertyModel.findAll({}, 1, 1);
+    const propertyStats = await PropertyModel.getStats();
     
     // Get booking stats
-    const bookingStats = await BookingModel.findAll(1, 1);
+    const bookingStats = await BookingModel.getStats();
 
     // Calculate revenue (sum of all confirmed bookings)
     const revenueSql = `
       SELECT 
-        COALESCE(SUM(total_amount), 0) as total_revenue,
-        COALESCE(COUNT(*), 0) as total_bookings,
-        COALESCE(AVG(total_amount), 0) as avg_booking_value
+        COALESCE(SUM(total_amount), 0) as total_revenue
       FROM bookings 
       WHERE status IN ('confirmed', 'completed')
     `;
-    const { query } = require('../config/database');
     const revenueResult = await query(revenueSql);
 
     // Get recent bookings
@@ -43,10 +41,10 @@ const getDashboardStats = async (req, res, next) => {
       data: {
         stats: {
           totalUsers: parseInt(userStats.total_users),
-          totalProperties: propertyStats.pagination.total,
-          totalBookings: bookingStats.pagination.total,
+          totalProperties: parseInt(propertyStats.total_properties),
+          totalBookings: parseInt(bookingStats.total_bookings),
           totalRevenue: parseFloat(revenueResult.rows[0].total_revenue),
-          avgBookingValue: parseFloat(revenueResult.rows[0].avg_booking_value),
+          avgBookingValue: parseFloat(bookingStats.avg_booking_value),
         },
         recentBookings: recentBookingsResult.rows,
       },
@@ -140,7 +138,7 @@ const getAllProperties = async (req, res, next) => {
     const sql = `
       SELECT p.*, u.name as landlord_name, u.email as landlord_email
       FROM properties p
-      LEFT JOIN users u ON p.landlord_id = u.id
+      LEFT JOIN users u ON p.owner_id = u.id
       ORDER BY p.created_at DESC
       LIMIT $1 OFFSET $2
     `;
@@ -260,11 +258,11 @@ const getAllBookings = async (req, res, next) => {
       sql = `
         SELECT b.*, p.title as property_title, p.images as property_images,
                u.name as guest_name, u.email as guest_email,
-               l.name as landlord_name, l.email as landlord_email
+               ow.name as owner_name, ow.email as owner_email
         FROM bookings b
         JOIN properties p ON b.property_id = p.id
         JOIN users u ON b.guest_id = u.id
-        LEFT JOIN users l ON p.landlord_id = l.id
+        LEFT JOIN users ow ON p.owner_id = ow.id
         WHERE b.status = $1
         ORDER BY b.created_at DESC
         LIMIT $2 OFFSET $3
@@ -276,11 +274,11 @@ const getAllBookings = async (req, res, next) => {
       sql = `
         SELECT b.*, p.title as property_title, p.images as property_images,
                u.name as guest_name, u.email as guest_email,
-               l.name as landlord_name, l.email as landlord_email
+               ow.name as owner_name, ow.email as owner_email
         FROM bookings b
         JOIN properties p ON b.property_id = p.id
         JOIN users u ON b.guest_id = u.id
-        LEFT JOIN users l ON p.landlord_id = l.id
+        LEFT JOIN users ow ON p.owner_id = ow.id
         ORDER BY b.created_at DESC
         LIMIT $1 OFFSET $2
       `;

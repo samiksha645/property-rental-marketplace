@@ -194,6 +194,21 @@
   color: #059669;
 }
 
+.status-paid {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.status-unpaid {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.status-refunded {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
 .action-buttons {
   display: flex;
   gap: 8px;

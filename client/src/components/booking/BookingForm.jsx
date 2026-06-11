@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { bookingService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const BookingForm = ({ property, onBookingSuccess, onBookingError }) => {
+  const { token } = useAuth();
   const [checkInDate, setCheckInDate] = useState('');
   const [checkOutDate, setCheckOutDate] = useState('');
   const [guestCount, setGuestCount] = useState(1);
@@ -54,11 +56,14 @@ const BookingForm = ({ property, onBookingSuccess, onBookingError }) => {
     if (!availability?.pricing) return null;
     
     const { pricing } = availability;
+    // Monthly rental model pricing
     return {
-      nights: pricing.nights,
-      subtotal: pricing.subtotal,
-      cleaningFee: pricing.cleaning_fee_charged,
-      serviceFee: pricing.service_fee,
+      months: pricing.months,
+      days: pricing.days,
+      monthlyRent: pricing.monthly_rent,
+      securityDeposit: pricing.security_deposit,
+      maintenanceFee: pricing.maintenance_fee,
+      totalRent: pricing.total_rent,
       total: pricing.total_amount,
     };
   };
@@ -76,8 +81,8 @@ const BookingForm = ({ property, onBookingSuccess, onBookingError }) => {
       return;
     }
 
-    if (guestCount > property.max_guests) {
-      setError(`Maximum ${property.max_guests} guests allowed`);
+    if (guestCount > 10) {
+      setError(`Maximum 10 guests allowed`);
       return;
     }
 
@@ -93,10 +98,7 @@ const BookingForm = ({ property, onBookingSuccess, onBookingError }) => {
       special_requests: specialRequests || null,
     };
 
-    // In production, get auth token from context/localStorage
-    const authToken = localStorage.getItem('auth_token');
-    
-    const result = await bookingService.createBooking(bookingData, authToken);
+    const result = await bookingService.createBooking(bookingData, token);
 
     if (result.success) {
       setSuccess('Booking created successfully! Redirecting to payment...');
@@ -162,9 +164,9 @@ const BookingForm = ({ property, onBookingSuccess, onBookingError }) => {
             onChange={(e) => setGuestCount(parseInt(e.target.value))}
             disabled={loading}
           >
-            {[...Array(property.max_guests)].map((_, i) => (
-              <option key={i + 1} value={i + 1}>
-                {i + 1} Guest{i !== 0 ? 's' : ''}
+            {[1,2,3,4,5,6,7,8,9,10].map((n) => (
+              <option key={n} value={n}>
+                {n} Guest{n !== 1 ? 's' : ''}
               </option>
             ))}
           </select>
@@ -198,20 +200,32 @@ const BookingForm = ({ property, onBookingSuccess, onBookingError }) => {
           <div className="price-breakdown">
             <h4>Price Breakdown</h4>
             <div className="price-row">
-              <span>${property.base_price_per_night} x {totalPrice.nights} nights</span>
-              <span>${totalPrice.subtotal}</span>
+              <span>Monthly Rent</span>
+              <span>₹{totalPrice.monthlyRent.toFixed(2)}</span>
             </div>
             <div className="price-row">
-              <span>Cleaning fee</span>
-              <span>${totalPrice.cleaningFee}</span>
+              <span>Duration</span>
+              <span>{totalPrice.months} month(s) ({totalPrice.days} days)</span>
             </div>
             <div className="price-row">
-              <span>Service fee (10%)</span>
-              <span>${totalPrice.serviceFee}</span>
+              <span>Total Rent</span>
+              <span>₹{totalPrice.totalRent.toFixed(2)}</span>
             </div>
+            {totalPrice.securityDeposit > 0 && (
+              <div className="price-row">
+                <span>Security Deposit</span>
+                <span>₹{totalPrice.securityDeposit.toFixed(2)}</span>
+              </div>
+            )}
+            {totalPrice.maintenanceFee > 0 && (
+              <div className="price-row">
+                <span>Maintenance Fee</span>
+                <span>₹{totalPrice.maintenanceFee.toFixed(2)}</span>
+              </div>
+            )}
             <div className="price-row total">
-              <strong>Total</strong>
-              <strong>${totalPrice.total}</strong>
+              <strong>Total Amount</strong>
+              <strong>₹{totalPrice.total.toFixed(2)}</strong>
             </div>
           </div>
         )}

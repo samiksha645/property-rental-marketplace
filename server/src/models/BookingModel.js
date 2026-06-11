@@ -1,233 +1,215 @@
 const { query } = require('../config/database');
 
 class BookingModel {
-  // Create a new booking
   static async create(bookingData) {
     const {
-      property_id,
-      guest_id,
-      check_in_date,
-      check_out_date,
-      subtotal,
-      cleaning_fee_charged,
-      service_fee,
-      total_amount,
-      guest_count,
-      special_requests,
-      payment_intent_id,
+      property_id, guest_id, owner_id, check_in_date, check_out_date,
+      monthly_rent, security_deposit, maintenance_fee, total_amount,
+      guest_count, special_requests, status, payment_status
     } = bookingData;
 
     const sql = `
       INSERT INTO bookings (
-        property_id, guest_id, check_in_date, check_out_date,
-        subtotal, cleaning_fee_charged, service_fee, total_amount,
-        guest_count, special_requests, payment_intent_id, status, payment_status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        property_id, guest_id, owner_id, check_in_date, check_out_date,
+        monthly_rent, security_deposit, maintenance_fee, total_amount,
+        guest_count, special_requests, status, payment_status
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
       RETURNING *
     `;
 
     const values = [
-      property_id, guest_id, check_in_date, check_out_date,
-      subtotal, cleaning_fee_charged, service_fee, total_amount,
-      guest_count, special_requests || null, payment_intent_id || null,
-      'pending', 'unpaid',
+      property_id, guest_id, owner_id || null,
+      check_in_date, check_out_date,
+      monthly_rent, security_deposit || 0, maintenance_fee || 0, total_amount,
+      guest_count || 1, special_requests || null,
+      status || 'pending', payment_status || 'unpaid'
     ];
 
     const result = await query(sql, values);
     return result.rows[0];
   }
 
-  // Find booking by ID
   static async findById(id) {
     const sql = `
-      SELECT b.*, p.title as property_title, p.images as property_images,
-             p.address_line1, p.city, p.state
+      SELECT b.*, p.title as property_title, p.city, p.state, p.address_line1,
+        p.images as property_images, p.monthly_rent as property_rent,
+        u.name as guest_name, u.email as guest_email, u.phone as guest_phone,
+        ow.name as owner_name, ow.email as owner_email
       FROM bookings b
       JOIN properties p ON b.property_id = p.id
+      JOIN users u ON b.guest_id = u.id
+      LEFT JOIN users ow ON b.owner_id = ow.id
       WHERE b.id = $1
     `;
     const result = await query(sql, [id]);
     return result.rows[0];
   }
 
-  // Get all bookings for a guest
   static async findByGuestId(guestId, page = 1, limit = 20) {
     const offset = (page - 1) * limit;
-    
+
+    const countSql = 'SELECT COUNT(*) FROM bookings WHERE guest_id = $1';
+    const countResult = await query(countSql, [guestId]);
+    const total = parseInt(countResult.rows[0].count);
+
     const sql = `
-      SELECT b.*, p.title as property_title, p.images as property_images,
-             p.address_line1, p.city, p.state
+      SELECT b.*, p.title as property_title, p.city, p.state, p.address_line1,
+        p.images as property_images, p.monthly_rent as property_rent,
+        p.locality, p.bedrooms, p.bathrooms, p.furnishing,
+        p.owner_name, p.owner_phone
       FROM bookings b
       JOIN properties p ON b.property_id = p.id
       WHERE b.guest_id = $1
       ORDER BY b.created_at DESC
       LIMIT $2 OFFSET $3
     `;
-    
     const result = await query(sql, [guestId, limit, offset]);
-    
-    const countSql = 'SELECT COUNT(*) FROM bookings WHERE guest_id = $1';
-    const countResult = await query(countSql, [guestId]);
-    
+
     return {
       data: result.rows,
-      pagination: {
-        page,
-        limit,
-        total: parseInt(countResult.rows[0].count),
-        totalPages: Math.ceil(parseInt(countResult.rows[0].count) / limit),
-      },
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   }
 
-  // Get all bookings for a property (for landlord)
   static async findByPropertyId(propertyId, page = 1, limit = 20) {
     const offset = (page - 1) * limit;
-    
-    const sql = `
-      SELECT b.*, p.title as property_title
-      FROM bookings b
-      JOIN properties p ON b.property_id = p.id
-      WHERE b.property_id = $1
-      ORDER BY b.check_in_date DESC
-      LIMIT $2 OFFSET $3
-    `;
-    
-    const result = await query(sql, [propertyId, limit, offset]);
-    
+
     const countSql = 'SELECT COUNT(*) FROM bookings WHERE property_id = $1';
     const countResult = await query(countSql, [propertyId]);
-    
+    const total = parseInt(countResult.rows[0].count);
+
+    const sql = `
+      SELECT b.*, u.name as guest_name, u.email as guest_email, u.phone as guest_phone
+      FROM bookings b
+      JOIN users u ON b.guest_id = u.id
+      WHERE b.property_id = $1
+      ORDER BY b.created_at DESC
+      LIMIT $2 OFFSET $3
+    `;
+    const result = await query(sql, [propertyId, limit, offset]);
+
     return {
       data: result.rows,
-      pagination: {
-        page,
-        limit,
-        total: parseInt(countResult.rows[0].count),
-        totalPages: Math.ceil(parseInt(countResult.rows[0].count) / limit),
-      },
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   }
 
-  // Get all bookings (for Admin)
-  static async findAll(page = 1, limit = 50) {
+  static async findAll(page = 1, limit = 50, status = null) {
     const offset = (page - 1) * limit;
+    let whereClause = '';
+    const values = [];
+
+    if (status) {
+      values.push(status);
+      whereClause = 'WHERE b.status = $1';
+    }
+
+    const countSql = `SELECT COUNT(*) FROM bookings b ${whereClause}`;
+    const countResult = await query(countSql, values);
+    const total = parseInt(countResult.rows[0].count);
+
     const sql = `
-      SELECT b.*, p.title as property_title, p.images as property_images,
-             p.address_line1, p.city, p.state
+      SELECT b.*, p.title as property_title, p.city, p.state,
+        p.images as property_images, p.monthly_rent as property_rent,
+        u.name as guest_name, u.email as guest_email,
+        ow.name as owner_name
       FROM bookings b
       JOIN properties p ON b.property_id = p.id
+      JOIN users u ON b.guest_id = u.id
+      LEFT JOIN users ow ON b.owner_id = ow.id
+      ${whereClause}
       ORDER BY b.created_at DESC
-      LIMIT $1 OFFSET $2
+      LIMIT $${values.length + 1} OFFSET $${values.length + 2}
     `;
-    const result = await query(sql, [limit, offset]);
-    
-    const countSql = 'SELECT COUNT(*) FROM bookings';
-    const countResult = await query(countSql);
-    
+    values.push(limit, offset);
+    const result = await query(sql, values);
+
     return {
       data: result.rows,
-      pagination: {
-        page,
-        limit,
-        total: parseInt(countResult.rows[0].count),
-        totalPages: Math.ceil(parseInt(countResult.rows[0].count) / limit),
-      },
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   }
 
-  // Check if property is available for given dates
   static async checkAvailability(propertyId, checkInDate, checkOutDate) {
     const sql = `
-      SELECT COUNT(*) as overlapping_bookings
-      FROM bookings
-      WHERE property_id = $1
-        AND status IN ('pending', 'confirmed')
-        AND daterange(check_in_date, check_out_date, '[)') && daterange($2, $3, '[)')
+      SELECT COUNT(*) as count FROM bookings 
+      WHERE property_id = $1 
+      AND status NOT IN ('cancelled')
+      AND (
+        (check_in_date <= $2 AND check_out_date > $2)
+        OR (check_in_date < $3 AND check_out_date >= $3)
+        OR (check_in_date >= $2 AND check_out_date <= $3)
+      )
     `;
-    
     const result = await query(sql, [propertyId, checkInDate, checkOutDate]);
-    const overlapping = parseInt(result.rows[0].overlapping_bookings);
-    
-    return overlapping === 0;
+    return parseInt(result.rows[0].count) === 0;
   }
 
-  // Update booking status
   static async updateStatus(id, status, cancellationReason = null) {
-    const updates = { status };
+    let sql;
+    let values;
+
     if (status === 'cancelled') {
-      updates.cancelled_at = new Date();
-      if (cancellationReason) {
-        updates.cancellation_reason = cancellationReason;
-      }
+      sql = `
+        UPDATE bookings 
+        SET status = $1, cancelled_at = CURRENT_TIMESTAMP, cancellation_reason = $2, 
+            payment_status = 'refunded', updated_at = CURRENT_TIMESTAMP
+        WHERE id = $3
+        RETURNING *
+      `;
+      values = [status, cancellationReason, id];
+    } else {
+      sql = `
+        UPDATE bookings 
+        SET status = $1, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2
+        RETURNING *
+      `;
+      values = [status, id];
     }
-    
-    const setClauses = [];
-    const values = [];
-    let paramCounter = 1;
-    
-    for (const [key, value] of Object.entries(updates)) {
-      setClauses.push(`${key} = $${paramCounter++}`);
-      values.push(value);
-    }
-    
-    values.push(id);
-    const sql = `
-      UPDATE bookings 
-      SET ${setClauses.join(', ')}
-      WHERE id = $${paramCounter}
-      RETURNING *
-    `;
-    
+
     const result = await query(sql, values);
     return result.rows[0];
   }
 
-  // Update payment status
-  static async updatePaymentStatus(id, paymentStatus, paymentIntentId = null) {
-    const updates = { payment_status: paymentStatus };
-    if (paymentIntentId) {
-      updates.payment_intent_id = paymentIntentId;
-    }
-    
+  static async confirm(id) {
     const sql = `
       UPDATE bookings 
-      SET payment_status = $1, payment_intent_id = COALESCE($2, payment_intent_id)
-      WHERE id = $3
+      SET status = 'confirmed', payment_status = 'paid', updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
       RETURNING *
     `;
-    
-    const result = await query(sql, [paymentStatus, paymentIntentId, id]);
+    const result = await query(sql, [id]);
     return result.rows[0];
   }
 
-  // Cancel booking
-  static async cancel(id, reason = null) {
-    return await this.updateStatus(id, 'cancelled', reason);
-  }
-
-  // Confirm booking (after payment)
-  static async confirm(id) {
-    const booking = await this.updateStatus(id, 'confirmed');
-    if (booking) {
-      await this.updatePaymentStatus(id, 'paid');
-    }
-    return booking;
-  }
-
-  // Get upcoming bookings for a property (to prevent double booking)
   static async getUpcomingBookings(propertyId) {
     const sql = `
-      SELECT check_in_date, check_out_date
-      FROM bookings
-      WHERE property_id = $1
-        AND status IN ('pending', 'confirmed')
-        AND check_out_date > CURRENT_DATE
+      SELECT * FROM bookings 
+      WHERE property_id = $1 
+      AND status NOT IN ('cancelled')
+      AND check_out_date >= CURRENT_DATE
       ORDER BY check_in_date ASC
     `;
-    
     const result = await query(sql, [propertyId]);
     return result.rows;
+  }
+
+  static async getStats() {
+    const sql = `
+      SELECT 
+        COUNT(*) as total_bookings,
+        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_bookings,
+        COUNT(CASE WHEN status = 'confirmed' THEN 1 END) as confirmed_bookings,
+        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_bookings,
+        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_bookings,
+        COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled_bookings,
+        COALESCE(SUM(total_amount), 0) as total_revenue,
+        COALESCE(AVG(total_amount), 0) as avg_booking_value
+      FROM bookings
+    `;
+    const result = await query(sql);
+    return result.rows[0];
   }
 }
 

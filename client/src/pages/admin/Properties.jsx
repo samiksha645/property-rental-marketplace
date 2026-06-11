@@ -4,6 +4,13 @@ import { adminService } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 import './AdminCommon.css';
 
+const formatPrice = (price) => {
+  if (!price) return '₹0';
+  if (price >= 100000) return `₹${(price / 100000).toFixed(1)}L`;
+  if (price >= 1000) return `₹${(price / 1000).toFixed(1)}K`;
+  return `₹${price}`;
+};
+
 const Properties = () => {
   const { token } = useAuth();
   const [properties, setProperties] = useState([]);
@@ -115,7 +122,7 @@ const Properties = () => {
                 <th>Title</th>
                 <th>Type</th>
                 <th>Location</th>
-                <th>Price/Night</th>
+                <th>Monthly Rent</th>
                 <th>Landlord</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -128,8 +135,8 @@ const Properties = () => {
                   <td>{property.title}</td>
                   <td>{property.property_type}</td>
                   <td>{property.city}, {property.state}</td>
-                  <td>${property.base_price_per_night}</td>
-                  <td>{property.landlord_name || 'N/A'}</td>
+                  <td>{formatPrice(property.monthly_rent)}/mo</td>
+                  <td>{property.landlord_name || property.owner_name || 'N/A'}</td>
                   <td>
                     <span className={`status-badge status-${property.is_active ? 'active' : 'inactive'}`}>
                       {property.is_active ? 'Active' : 'Inactive'}
@@ -190,11 +197,11 @@ const Properties = () => {
                 />
               </div>
               <div className="form-group">
-                <label>Price per Night</label>
+                <label>Monthly Rent (₹)</label>
                 <input
                   type="number"
-                  name="base_price_per_night"
-                  value={editingProperty.base_price_per_night}
+                  name="monthly_rent"
+                  value={editingProperty.monthly_rent}
                   onChange={handleInputChange}
                 />
               </div>
@@ -221,7 +228,7 @@ const Properties = () => {
                 <select
                   name="is_active"
                   value={editingProperty.is_active}
-                  onChange={handleInputChange}
+                  onChange={(e) => setEditingProperty(prev => ({ ...prev, is_active: e.target.value === 'true' }))}
                 >
                   <option value={true}>Yes</option>
                   <option value={false}>No</option>
