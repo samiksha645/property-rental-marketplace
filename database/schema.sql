@@ -226,13 +226,17 @@ $$;
 -- ===================================================
 INSERT INTO categories (name, slug, description, icon, sort_order) VALUES
 ('Apartment', 'apartment', 'Modern apartments in residential complexes', 'building', 1),
-('Independent House', 'independent-house', 'Standalone houses with private garden', 'home', 2),
-('PG/Hostel', 'pg-hostel', 'Paying guest accommodations for students and professionals', 'users', 3),
-('Villa', 'villa', 'Luxury villas with premium amenities', 'tree-pine', 4),
-('Studio', 'studio', 'Compact studio apartments for singles and couples', 'maximize', 5),
-('Farmhouse', 'farmhouse', 'Spacious farmhouses on the outskirts', 'tractor', 6),
-('Penthouse', 'penthouse', 'Premium penthouses with city views', 'building-2', 7),
-('Duplex', 'duplex', 'Two-story duplex apartments', 'layers', 8)
+('Flat', 'flat', 'Comfortable flats in residential neighborhoods', 'home', 2),
+('Villa', 'villa', 'Luxury villas with premium amenities', 'tree-pine', 3),
+('Independent House', 'independent-house', 'Standalone houses with private yards', 'home', 4),
+('Studio Apartment', 'studio-apartment', 'Compact studio apartments for singles and couples', 'maximize', 5),
+('PG', 'pg', 'Paying guest accommodations for students and professionals', 'users', 6),
+('Builder Floor', 'builder-floor', 'Independent floors in low-rise residential layouts', 'layers', 7),
+('Farm House', 'farm-house', 'Spacious farmhouses on the outskirts', 'tractor', 8),
+('Penthouse', 'penthouse', 'Premium penthouses with city views', 'building-2', 9),
+('Office', 'office', 'Premium commercial office spaces', 'briefcase', 10),
+('Shop', 'shop', 'Commercial retail shop spaces', 'shopping-bag', 11),
+('Warehouse', 'warehouse', 'Industrial storage and warehouse spaces', 'warehouse', 12)
 ON CONFLICT (name) DO NOTHING;
 
 -- ===================================================

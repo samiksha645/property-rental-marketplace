@@ -18,11 +18,17 @@ const popularCities = [
 
 const categories = [
   { name: 'Apartment', icon: '🏢', count: 0 },
-  { name: 'Independent House', icon: '🏠', count: 0 },
-  { name: 'PG/Hostel', icon: '🏘️', count: 0 },
+  { name: 'Flat', icon: '🏠', count: 0 },
   { name: 'Villa', icon: '🏡', count: 0 },
-  { name: 'Studio', icon: '📐', count: 0 },
+  { name: 'Independent House', icon: '🏠', count: 0 },
+  { name: 'Studio Apartment', icon: '📐', count: 0 },
+  { name: 'PG', icon: '🏘️', count: 0 },
+  { name: 'Builder Floor', icon: '🥞', count: 0 },
+  { name: 'Farm House', icon: '🚜', count: 0 },
   { name: 'Penthouse', icon: '🏗️', count: 0 },
+  { name: 'Office', icon: '💼', count: 0 },
+  { name: 'Shop', icon: '🛒', count: 0 },
+  { name: 'Warehouse', icon: '📦', count: 0 },
 ];
 
 const testimonials = [
@@ -142,10 +148,17 @@ const HomePage = () => {
                 <select value={searchFilters.type} onChange={(e) => setSearchFilters({ ...searchFilters, type: e.target.value })}>
                   <option value="">All Types</option>
                   <option value="apartment">Apartment</option>
-                  <option value="independent-house">Independent House</option>
+                  <option value="flat">Flat</option>
                   <option value="villa">Villa</option>
-                  <option value="studio">Studio</option>
+                  <option value="independent-house">Independent House</option>
+                  <option value="studio-apartment">Studio Apartment</option>
+                  <option value="pg-hostel">PG</option>
+                  <option value="builder-floor">Builder Floor</option>
+                  <option value="farmhouse">Farm House</option>
                   <option value="penthouse">Penthouse</option>
+                  <option value="office">Office</option>
+                  <option value="shop">Shop</option>
+                  <option value="warehouse">Warehouse</option>
                 </select>
               </div>
               <div className="search-field search-field-budget">

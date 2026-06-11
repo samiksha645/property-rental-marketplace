@@ -121,6 +121,9 @@ VALUES (
 ON CONFLICT (email) DO NOTHING;
 `;
 
+const fs = require('fs');
+const path = require('path');
+
 async function setupDatabase() {
   const connectionString = process.env.DATABASE_URL;
   
@@ -132,21 +135,34 @@ async function setupDatabase() {
   const pgPool = new Pool({ connectionString });
   
   try {
-    console.log('🚀 Setting up database...');
+    console.log('🚀 Setting up database from schema.sql...');
+    const schemaPath = path.join(__dirname, 'schema.sql');
+    const schemaSql = fs.readFileSync(schemaPath, 'utf8');
     
-    await pgPool.query(schema);
+    await pgPool.query(schemaSql);
     
-    console.log('✅ Database setup completed successfully');
+    // Create/Update default admin user
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash('admin123', 12);
+    
+    await pgPool.query(`
+      INSERT INTO users (name, email, password, role, is_active, is_email_verified)
+      VALUES ($1, $2, $3, 'admin', true, true)
+      ON CONFLICT (email) 
+      DO UPDATE SET password = $3, role = 'admin', is_active = true;
+    `, ['Admin User', 'admin@rentalmarketplace.com', hashedPassword]);
+
+    console.log('✅ Database setup completed successfully with schema.sql!');
     console.log('');
     console.log('📝 Default Admin Credentials:');
     console.log('   Email: admin@rentalmarketplace.com');
     console.log('   Password: admin123');
     console.log('');
-    console.log('⚠️  IMPORTANT: Change these credentials in production!');
     
     process.exit(0);
   } catch (error) {
     console.error('❌ Database setup failed:', error.message);
+    console.error(error.stack);
     process.exit(1);
   } finally {
     await pgPool.end();

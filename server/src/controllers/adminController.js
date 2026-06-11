@@ -170,11 +170,14 @@ const createProperty = async (req, res, next) => {
   try {
     const propertyData = { ...req.body };
     
-    // If no landlord_id provided, use a default or require it
-    if (!propertyData.landlord_id) {
+    // If no owner_id provided, use a default or require it
+    if (!propertyData.owner_id && propertyData.landlord_id) {
+      propertyData.owner_id = propertyData.landlord_id;
+    }
+    if (!propertyData.owner_id) {
       return res.status(400).json({
         success: false,
-        message: 'Landlord ID is required',
+        message: 'Owner ID is required',
       });
     }
 
@@ -262,7 +265,7 @@ const getAllBookings = async (req, res, next) => {
         FROM bookings b
         JOIN properties p ON b.property_id = p.id
         JOIN users u ON b.guest_id = u.id
-        LEFT JOIN users ow ON p.owner_id = ow.id
+      LEFT JOIN users ow ON b.owner_id = ow.id
         WHERE b.status = $1
         ORDER BY b.created_at DESC
         LIMIT $2 OFFSET $3
@@ -278,7 +281,7 @@ const getAllBookings = async (req, res, next) => {
         FROM bookings b
         JOIN properties p ON b.property_id = p.id
         JOIN users u ON b.guest_id = u.id
-        LEFT JOIN users ow ON p.owner_id = ow.id
+        LEFT JOIN users ow ON b.owner_id = ow.id
         ORDER BY b.created_at DESC
         LIMIT $1 OFFSET $2
       `;
@@ -339,15 +342,191 @@ const updateBookingStatus = async (req, res, next) => {
   }
 };
 
+// ============ REVIEWS MANAGEMENT ============
+// Get all reviews
+const getAllReviews = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 50 } = req.query;
+    const offset = (page - 1) * limit;
+    const { query } = require('../config/database');
+    
+    const result = await query(`
+      SELECT r.*, u.name as user_name, u.email as user_email,
+             p.title as property_title, p.city
+      FROM reviews r
+      JOIN users u ON r.user_id = u.id
+      JOIN properties p ON r.property_id = p.id
+      ORDER BY r.created_at DESC
+      LIMIT $1 OFFSET $2
+    `, [limit, offset]);
+    
+    const countResult = await query('SELECT COUNT(*) FROM reviews');
+    
+    res.status(200).json({
+      success: true,
+      data: result.rows,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: parseInt(countResult.rows[0].count),
+        totalPages: Math.ceil(parseInt(countResult.rows[0].count) / limit),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete review
+const deleteReview = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { query } = require('../config/database');
+    await query('DELETE FROM reviews WHERE id = $1', [id]);
+    res.status(200).json({ success: true, message: 'Review deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ============ CATEGORIES MANAGEMENT ============
+// Create category
+const createCategory = async (req, res, next) => {
+  try {
+    const { name, slug, description, icon, image, sort_order } = req.body;
+    const { query } = require('../config/database');
+    const result = await query(
+      `INSERT INTO categories (name, slug, description, icon, image, sort_order) 
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [name, slug, description, icon, image, sort_order || 0]
+    );
+    res.status(201).json({ success: true, data: result.rows[0], message: 'Category created successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update category
+const updateCategory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name, slug, description, icon, image, is_active, sort_order } = req.body;
+    const { query } = require('../config/database');
+    const result = await query(
+      `UPDATE categories SET name = COALESCE($1, name), slug = COALESCE($2, slug), 
+       description = COALESCE($3, description), icon = COALESCE($4, icon), 
+       image = COALESCE($5, image), is_active = COALESCE($6, is_active), 
+       sort_order = COALESCE($7, sort_order)
+       WHERE id = $8 RETURNING *`,
+      [name, slug, description, icon, image, is_active, sort_order, id]
+    );
+    if (!result.rows[0]) return res.status(404).json({ success: false, message: 'Category not found' });
+    res.status(200).json({ success: true, data: result.rows[0], message: 'Category updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete category
+const deleteCategory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { query } = require('../config/database');
+    await query('DELETE FROM categories WHERE id = $1', [id]);
+    res.status(200).json({ success: true, message: 'Category deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ============ CITIES MANAGEMENT ============
+// Create city
+const createCity = async (req, res, next) => {
+  try {
+    const { name, state, slug, image, is_popular } = req.body;
+    const { query } = require('../config/database');
+    const result = await query(
+      `INSERT INTO cities (name, state, slug, image, is_popular) 
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [name, state, slug, image, is_popular || false]
+    );
+    res.status(201).json({ success: true, data: result.rows[0], message: 'City created successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update city
+const updateCity = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name, state, slug, image, is_popular, is_active } = req.body;
+    const { query } = require('../config/database');
+    const result = await query(
+      `UPDATE cities SET name = COALESCE($1, name), state = COALESCE($2, state), 
+       slug = COALESCE($3, slug), image = COALESCE($4, image), 
+       is_popular = COALESCE($5, is_popular), is_active = COALESCE($6, is_active)
+       WHERE id = $7 RETURNING *`,
+      [name, state, slug, image, is_popular, is_active, id]
+    );
+    if (!result.rows[0]) return res.status(404).json({ success: false, message: 'City not found' });
+    res.status(200).json({ success: true, data: result.rows[0], message: 'City updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete city
+const deleteCity = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { query } = require('../config/database');
+    await query('DELETE FROM cities WHERE id = $1', [id]);
+    res.status(200).json({ success: true, message: 'City deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Toggle user active status (block/activate)
+const toggleUserStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const user = await UserModel.findById(id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    
+    const newStatus = !user.is_active;
+    const { query } = require('../config/database');
+    await query('UPDATE users SET is_active = $1 WHERE id = $2', [newStatus, id]);
+    
+    res.status(200).json({ 
+      success: true, 
+      message: newStatus ? 'User activated successfully' : 'User blocked successfully',
+      is_active: newStatus
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getDashboardStats,
   getAllUsers,
   getUserById,
   deleteUser,
+  toggleUserStatus,
   getAllProperties,
   createProperty,
   updateProperty,
   deleteProperty,
   getAllBookings,
   updateBookingStatus,
+  getAllReviews,
+  deleteReview,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  createCity,
+  updateCity,
+  deleteCity,
 };

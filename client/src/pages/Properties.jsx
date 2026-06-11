@@ -94,10 +94,17 @@ const Properties = () => {
               <select value={filters.property_type} onChange={(e) => handleFilterChange('property_type', e.target.value)}>
                 <option value="">All Types</option>
                 <option value="apartment">Apartment</option>
-                <option value="independent-house">Independent House</option>
+                <option value="flat">Flat</option>
                 <option value="villa">Villa</option>
-                <option value="studio">Studio</option>
+                <option value="independent-house">Independent House</option>
+                <option value="studio">Studio Apartment</option>
+                <option value="pg">PG</option>
+                <option value="builder-floor">Builder Floor</option>
+                <option value="farmhouse">Farm House</option>
                 <option value="penthouse">Penthouse</option>
+                <option value="office">Office</option>
+                <option value="shop">Shop</option>
+                <option value="warehouse">Warehouse</option>
               </select>
             </div>
             <div className="filter-group">

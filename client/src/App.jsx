@@ -13,6 +13,9 @@ import Dashboard from './pages/admin/Dashboard';
 import Users from './pages/admin/Users';
 import AdminProperties from './pages/admin/Properties';
 import Bookings from './pages/admin/Bookings';
+import AdminReviews from './pages/admin/Reviews';
+import AdminCategories from './pages/admin/Categories';
+import AdminCities from './pages/admin/Cities';
 import AdminLayout from './components/admin/AdminLayout';
 import './index.css';
 
@@ -55,6 +58,9 @@ const AppContent = () => {
         <Route path="/admin/users" element={<AdminRoute><Users /></AdminRoute>} />
         <Route path="/admin/properties" element={<AdminRoute><AdminProperties /></AdminRoute>} />
         <Route path="/admin/bookings" element={<AdminRoute><Bookings /></AdminRoute>} />
+        <Route path="/admin/reviews" element={<AdminRoute><AdminReviews /></AdminRoute>} />
+        <Route path="/admin/categories" element={<AdminRoute><AdminCategories /></AdminRoute>} />
+        <Route path="/admin/cities" element={<AdminRoute><AdminCities /></AdminRoute>} />
       </Routes>
     </div>
   );

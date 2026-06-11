@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import PropertyCard from '../../components/property/PropertyCard';
+
+const API_BASE_URL = 'http://localhost:5000/api/v1';
 
 const WishlistPage = () => {
   const { token } = useAuth();
   const navigate = useNavigate();
-  const [properties, setProperties] = useState([]);
+  const [wishlistItems, setWishlistItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,15 +17,15 @@ const WishlistPage = () => {
 
   const loadWishlist = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/v1/wishlist', {
+      const response = await fetch(`${API_BASE_URL}/wishlist`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
       const data = await response.json();
       if (data.success) {
-        setProperties(data.data || []);
+        setWishlistItems(data.data || []);
       }
     } catch (err) {
       console.error('Failed to load wishlist:', err);
@@ -32,69 +35,78 @@ const WishlistPage = () => {
 
   const handleRemove = async (propertyId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/v1/wishlist/${propertyId}`, {
+      const response = await fetch(`${API_BASE_URL}/wishlist/${propertyId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
       const data = await response.json();
       if (data.success) {
-        setProperties(properties.filter(p => p.id !== propertyId));
+        setWishlistItems(wishlistItems.filter(item => item.property_id !== propertyId));
       }
     } catch (err) {
       console.error('Failed to remove from wishlist:', err);
     }
   };
 
+  const handlePropertyClick = (id) => {
+    navigate(`/property/${id}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="container" style={{ padding: '60px 20px', textAlign: 'center' }}>
+        <div className="spinner"></div>
+        <p>Loading wishlist...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="container" style={{ padding: '40px 20px' }}>
       <div className="page-header" style={{ marginBottom: '30px' }}>
         <h1>My Wishlist</h1>
-        <p>Properties you've saved for later</p>
+        <p>{wishlistItems.length} saved properties</p>
       </div>
 
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '60px' }}>
-          <div className="spinner"></div>
-          <p>Loading wishlist...</p>
-        </div>
-      ) : properties.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px' }}>
-          <span style={{ fontSize: '64px' }}>❤️</span>
+      {wishlistItems.length === 0 ? (
+        <div className="empty-state" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <span style={{ fontSize: '48px', display: 'block', marginBottom: '12px' }}>❤️</span>
           <h3>Your wishlist is empty</h3>
-          <p>Start browsing and save properties you like</p>
+          <p>Save properties you like to find them later</p>
           <button className="btn btn-primary" onClick={() => navigate('/properties')}>
             Browse Properties
           </button>
         </div>
       ) : (
         <div className="properties-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
-          {properties.map(property => (
-            <div key={property.id} className="wishlist-card" style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <div onClick={() => navigate(`/property/${property.id}`)} style={{ cursor: 'pointer' }}>
-                {property.images && property.images[0] ? (
-                  <img src={property.images[0]} alt={property.title} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ width: '100%', height: '200px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>🏡</div>
-                )}
-                <div style={{ padding: '16px' }}>
-                  <h3 style={{ margin: '0 0 8px', fontSize: '18px' }}>{property.title}</h3>
-                  <p style={{ margin: '0 0 8px', color: '#64748b' }}>📍 {property.city}, {property.state}</p>
-                  <p style={{ margin: 0, fontWeight: '600', color: '#2563eb', fontSize: '20px' }}>
-                    ₹{Number(property.monthly_rent || 0).toLocaleString()}<span style={{ fontSize: '14px', fontWeight: 'normal', color: '#64748b' }}>/mo</span>
-                  </p>
-                </div>
-              </div>
-              <div style={{ padding: '0 16px 16px', display: 'flex', gap: '8px' }}>
-                <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => navigate(`/property/${property.id}`)}>
-                  View Details
-                </button>
-                <button className="btn btn-secondary" onClick={() => handleRemove(property.id)}>
-                  Remove
-                </button>
-              </div>
+          {wishlistItems.map(item => (
+            <div key={item.id} style={{ position: 'relative' }}>
+              <PropertyCard 
+                property={item.property || item} 
+                onPropertyClick={handlePropertyClick}
+              />
+              <button
+                onClick={() => handleRemove(item.property_id || item.id)}
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  background: 'rgba(239, 68, 68, 0.9)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  zIndex: 10,
+                }}
+              >
+                ✕ Remove
+              </button>
             </div>
           ))}
         </div>
