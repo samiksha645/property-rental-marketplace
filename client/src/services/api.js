@@ -15,7 +15,7 @@ const getAPIBaseURL = () => {
   }
   
   // Production URL as fallback
-  return 'https://property-rental-marketplace-3wo7.onrender.com/api/v1';
+  return 'https://property-rental-market.onrender.com/api/v1';
 };
 
 const API_BASE_URL = getAPIBaseURL();

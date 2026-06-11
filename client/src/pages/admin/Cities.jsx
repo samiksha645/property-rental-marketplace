@@ -17,7 +17,7 @@ const Cities = () => {
   const loadCities = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/v1/cities');
+      const response = await fetch('/api/v1/cities');
       const data = await response.json();
       if (data.success) {
         setCities(data.data);
