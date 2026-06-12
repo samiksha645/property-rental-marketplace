@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { propertyService } from '../services/api';
+import { propertyService, wishlistService } from '../services/api';
 import { API_BASE_URL } from '../services/authService';
 import BookingForm from '../components/booking/BookingForm';
 import { useAuth } from '../context/AuthContext';
@@ -55,16 +55,11 @@ const PropertyDetails = () => {
   };
 
   const checkWishlistStatus = async () => {
-    if (!isAuthenticated || !id) return;
+    if (!isAuthenticated || !id || !token) return;
     try {
-      const response = await fetch(`${API_BASE_URL}/wishlist/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      if (data.success && data.data) {
-        setIsWishlisted(data.data.is_wishlisted);
+      const result = await wishlistService.isWishlisted(token, id);
+      if (result.success) {
+        setIsWishlisted(result.is_wishlisted);
       }
     } catch (err) {
       console.error('Failed to check wishlist status:', err);
@@ -76,23 +71,18 @@ const PropertyDetails = () => {
       navigate('/login');
       return;
     }
+    if (!token) return;
     try {
-      const method = isWishlisted ? 'DELETE' : 'POST';
-      const url = isWishlisted 
-        ? `${API_BASE_URL}/wishlist/${id}` 
-        : `${API_BASE_URL}/wishlist`;
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: isWishlisted ? undefined : JSON.stringify({ property_id: id })
-      });
-      const data = await response.json();
-      if (data.success) {
+      let result;
+      if (isWishlisted) {
+        result = await wishlistService.removeFromWishlist(token, id);
+      } else {
+        result = await wishlistService.addToWishlist(token, id);
+      }
+      if (result.success) {
         setIsWishlisted(!isWishlisted);
+      } else {
+        console.error('Wishlist toggle failed:', result.error);
       }
     } catch (err) {
       console.error('Wishlist toggle error:', err);
@@ -126,6 +116,11 @@ const PropertyDetails = () => {
   // Get safe image URL with fallback
   const getSafeImageUrl = (img, index = 0) => {
     if (imageErrors[index]) return FALLBACK_IMAGE;
+    if (!img || img === '') return FALLBACK_IMAGE;
+    // If the URL is a relative path or missing protocol, use fallback
+    if (typeof img === 'string' && !img.startsWith('http://') && !img.startsWith('https://') && !img.startsWith('/')) {
+      return FALLBACK_IMAGE;
+    }
     return img || FALLBACK_IMAGE;
   };
 

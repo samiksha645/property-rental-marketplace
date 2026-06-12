@@ -88,6 +88,26 @@ const fetchWithTimeout = async (url, options = {}, timeout = 15000) => {
   }
 };
 
+// Helper to extract data array from API response
+// Server returns { success: true, data: [...], pagination: {...} }
+// Client expects properties/bookings/etc array
+const extractData = (response, field = 'data') => {
+  if (!response.success) return [];
+  // Server wraps array in response.data
+  if (Array.isArray(response.data)) return response.data;
+  // Server wraps in response[field]
+  if (Array.isArray(response[field])) return response[field];
+  // Single object - wrap in array
+  if (response.data && typeof response.data === 'object' && !Array.isArray(response.data)) {
+    // Check if there's a nested array like response.data.properties
+    for (const key of ['properties', 'bookings', 'users', 'reviews', 'categories', 'cities']) {
+      if (Array.isArray(response.data[key])) return response.data[key];
+    }
+    return [response.data];
+  }
+  return [];
+};
+
 // Property API Service
 export const propertyService = {
   // Get all properties with optional filters
@@ -103,7 +123,7 @@ export const propertyService = {
       const data = await handleResponse(response);
       return {
         success: true,
-        properties: data.data,
+        properties: extractData(data),
         pagination: data.pagination,
       };
     } catch (error) {
@@ -123,7 +143,7 @@ export const propertyService = {
       const data = await handleResponse(response);
       return {
         success: true,
-        properties: data.data,
+        properties: extractData(data),
       };
     } catch (error) {
       console.error('Error fetching featured properties:', error);
@@ -144,7 +164,7 @@ export const propertyService = {
       const data = await handleResponse(response);
       return {
         success: true,
-        properties: data.data,
+        properties: extractData(data),
         pagination: data.pagination,
       };
     } catch (error) {
@@ -164,7 +184,7 @@ export const propertyService = {
       const data = await handleResponse(response);
       return {
         success: true,
-        property: data.data,
+        property: data.data || null,
       };
     } catch (error) {
       console.error('Error fetching property:', error);
@@ -282,8 +302,8 @@ export const bookingService = {
       const data = await handleResponse(response);
       return {
         success: true,
-        booking: data.data.booking,
-        pricing: data.data.pricing,
+        booking: data.data?.booking || data.data,
+        pricing: data.data?.pricing,
         message: data.message,
       };
     } catch (error) {
@@ -305,8 +325,8 @@ export const bookingService = {
       const data = await handleResponse(response);
       return {
         success: true,
-        available: data.data.available,
-        pricing: data.data.pricing,
+        available: data.data?.available ?? true,
+        pricing: data.data?.pricing,
       };
     } catch (error) {
       console.error('Error checking availability:', error);
@@ -333,7 +353,7 @@ export const bookingService = {
       const data = await handleResponse(response);
       return {
         success: true,
-        bookings: data.data,
+        bookings: extractData(data),
         pagination: data.pagination,
       };
     } catch (error) {
@@ -361,7 +381,7 @@ export const bookingService = {
       const data = await handleResponse(response);
       return {
         success: true,
-        bookings: data.data,
+        bookings: extractData(data),
         pagination: data.pagination,
       };
     } catch (error) {
@@ -428,6 +448,71 @@ export const bookingService = {
         success: false,
         error: error.message,
       };
+    }
+  },
+};
+
+// Wishlist Service
+export const wishlistService = {
+  // Get user's wishlist
+  getWishlist: async (authToken, page = 1, limit = 20) => {
+    try {
+      const response = await fetchWithTimeout(
+        `${API_BASE_URL}/wishlist?page=${page}&limit=${limit}`,
+        { headers: { 'Authorization': `Bearer ${authToken}` } }
+      );
+      const data = await handleResponse(response);
+      return {
+        success: true,
+        wishlist: extractData(data),
+        pagination: data.pagination,
+      };
+    } catch (error) {
+      console.error('Error fetching wishlist:', error);
+      return { success: false, error: error.message, wishlist: [] };
+    }
+  },
+
+  // Add to wishlist
+  addToWishlist: async (authToken, propertyId) => {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/wishlist`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        body: JSON.stringify({ property_id: parseInt(propertyId) }),
+      });
+      const data = await handleResponse(response);
+      return { success: true, data: data.data, message: data.message };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Remove from wishlist
+  removeFromWishlist: async (authToken, propertyId) => {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/wishlist/${propertyId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${authToken}` },
+      });
+      const data = await handleResponse(response);
+      return { success: true, message: data.message };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Check if property is wishlisted
+  isWishlisted: async (authToken, propertyId) => {
+    try {
+      const response = await fetchWithTimeout(
+        `${API_BASE_URL}/wishlist/check/${propertyId}`,
+        { headers: { 'Authorization': `Bearer ${authToken}` } }
+      );
+      const data = await handleResponse(response);
+      return { success: true, is_wishlisted: data.data?.is_wishlisted || false };
+    } catch (error) {
+      return { success: false, is_wishlisted: false, error: error.message };
     }
   },
 };

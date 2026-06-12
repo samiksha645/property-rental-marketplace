@@ -56,6 +56,15 @@ const AdminRoute = ({ children }) => {
   return <AdminLayout>{children}</AdminLayout>;
 };
 
+// Simple placeholder pages for sections that scroll to sections on homepage
+const SectionRedirect = ({ section }) => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    navigate(`/#${section}`, { replace: true });
+  }, [navigate, section]);
+  return null;
+};
+
 const AppContent = () => {
   const { loading } = useAuth();
   if (loading) return <div className="loading-screen"><div className="spinner"></div><p>Loading...</p></div>;
@@ -70,6 +79,12 @@ const AppContent = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
+        {/* Section anchor routes - redirect to homepage sections */}
+        <Route path="/explore" element={<SectionRedirect section="explore" />} />
+        <Route path="/services" element={<SectionRedirect section="services" />} />
+        <Route path="/about" element={<SectionRedirect section="about" />} />
+        <Route path="/contact" element={<SectionRedirect section="contact" />} />
+        
         {/* User Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
         <Route path="/wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
@@ -82,6 +97,15 @@ const AppContent = () => {
         <Route path="/admin/reviews" element={<AdminRoute><AdminReviews /></AdminRoute>} />
         <Route path="/admin/categories" element={<AdminRoute><AdminCategories /></AdminRoute>} />
         <Route path="/admin/cities" element={<AdminRoute><AdminCities /></AdminRoute>} />
+
+        {/* 404 catch-all */}
+        <Route path="*" element={
+          <div style={{ textAlign: 'center', padding: '100px 20px' }}>
+            <h1 style={{ fontSize: '4rem', color: '#0f172a', marginBottom: '12px' }}>404</h1>
+            <p style={{ color: '#64748b', marginBottom: '24px', fontSize: '1.125rem' }}>Page not found</p>
+            <a href="/" className="btn btn-primary">Go Home</a>
+          </div>
+        } />
       </Routes>
     </div>
   );
