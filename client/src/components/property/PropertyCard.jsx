@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './PropertyCard.css';
+
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80';
 
 const formatPrice = (price) => {
   if (!price) return '₹0';
@@ -9,6 +11,8 @@ const formatPrice = (price) => {
 };
 
 const PropertyCard = ({ property, onPropertyClick }) => {
+  const [imgError, setImgError] = useState(false);
+
   const {
     id,
     title,
@@ -36,29 +40,39 @@ const PropertyCard = ({ property, onPropertyClick }) => {
 
   const displayImage = images && images.length > 0 ? images[0] : null;
 
+  const formatPropertyType = (type) => {
+    if (!type) return '';
+    return type.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
   return (
     <div className="property-card" onClick={handleClick}>
       <div className="property-card-image-container">
-        {displayImage ? (
+        {displayImage && !imgError ? (
           <img 
             src={displayImage} 
             alt={title} 
             className="property-card-image"
             loading="lazy"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80';
-            }}
+            onError={() => setImgError(true)}
           />
         ) : (
-          <div className="property-card-image-fallback">🏡</div>
+          <div className="property-card-image-fallback">
+            <img 
+              src={FALLBACK_IMAGE}
+              alt={title}
+              className="property-card-image"
+              loading="lazy"
+              style={{ opacity: 0.8 }}
+            />
+          </div>
         )}
         <div className="property-card-badges">
           {is_featured && <span className="badge badge-featured">⭐ Featured</span>}
           {is_verified && <span className="badge badge-verified">✓ Verified</span>}
           {pet_friendly && <span className="badge badge-primary">🐾 Pet Friendly</span>}
         </div>
-        <div className="property-card-type">{property_type}</div>
+        <div className="property-card-type">{formatPropertyType(property_type)}</div>
       </div>
 
       <div className="property-card-content">
@@ -69,7 +83,7 @@ const PropertyCard = ({ property, onPropertyClick }) => {
         <h3 className="property-card-title">{title}</h3>
         
         <div className="property-card-specs">
-          <span className="spec" title="Bedrooms">🛏️ {bedrooms} Bhk</span>
+          <span className="spec" title="Bedrooms">🛏️ {bedrooms} BHK</span>
           <span className="spec" title="Bathrooms">🚿 {bathrooms}</span>
           {area_sqft && <span className="spec" title="Area">📐 {area_sqft} sqft</span>}
           <span className="spec" title="Furnishing">

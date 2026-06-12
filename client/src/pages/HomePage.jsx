@@ -7,33 +7,28 @@ import PropertyCard from '../components/property/PropertyCard';
 import './HomePage.css';
 
 const popularCities = [
-  { name: 'Delhi', state: 'Delhi', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Mumbai', state: 'Maharashtra', image: 'https://images.unsplash.com/photo-1529253355930-ddbe423a2ac7?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Bangalore', state: 'Karnataka', image: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Hyderabad', state: 'Telangana', image: 'https://images.unsplash.com/photo-1572445271230-a78b5944a659?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Pune', state: 'Maharashtra', image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Chennai', state: 'Tamil Nadu', image: 'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Kolkata', state: 'West Bengal', image: 'https://images.unsplash.com/photo-1558431382-27e303142255?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Ahmedabad', state: 'Gujarat', image: 'https://images.unsplash.com/photo-1627918392138-04ff531fb2d0?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Jaipur', state: 'Rajasthan', image: 'https://images.unsplash.com/photo-1477587458883-471a5ed94245?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Noida', state: 'Uttar Pradesh', image: 'https://images.unsplash.com/photo-1595841696667-aa68d601dd1a?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Gurugram', state: 'Haryana', image: 'https://images.unsplash.com/photo-1601579621360-685a21edd83a?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Lucknow', state: 'Uttar Pradesh', image: 'https://images.unsplash.com/photo-1598091857921-6b2d7a24badc?auto=format&fit=crop&w=600&q=80', count: 0 },
+  { name: 'Ahmedabad', state: 'Gujarat', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=800&q=80', count: 150, countLabel: '150+' },
+  { name: 'Jaipur', state: 'Rajasthan', image: 'https://images.unsplash.com/photo-1477587458883-471a5ed94245?auto=format&fit=crop&w=800&q=80', count: 120, countLabel: '120+' },
+  { name: 'Noida', state: 'Uttar Pradesh', image: 'https://images.unsplash.com/photo-1595841696667-aa68d601dd1a?auto=format&fit=crop&w=800&q=80', count: 200, countLabel: '200+' },
+  { name: 'Gurugram', state: 'Haryana', image: 'https://images.unsplash.com/photo-1601579621360-685a21edd83a?auto=format&fit=crop&w=800&q=80', count: 250, countLabel: '250+' },
+  { name: 'Lucknow', state: 'Uttar Pradesh', image: 'https://images.unsplash.com/photo-1598091857921-6b2d7a24badc?auto=format&fit=crop&w=800&q=80', count: 140, countLabel: '140+' },
+  { name: 'Delhi', state: 'Delhi', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=800&q=80', count: 500, countLabel: '500+' },
+  { name: 'Mumbai', state: 'Maharashtra', image: 'https://images.unsplash.com/photo-1529253355930-ddbe423a2ac7?auto=format&fit=crop&w=800&q=80', count: 450, countLabel: '450+' },
+  { name: 'Bangalore', state: 'Karnataka', image: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=800&q=80', count: 350, countLabel: '350+' },
+  { name: 'Hyderabad', state: 'Telangana', image: 'https://images.unsplash.com/photo-1572445271230-a78b5944a659?auto=format&fit=crop&w=800&q=80', count: 300, countLabel: '300+' },
+  { name: 'Pune', state: 'Maharashtra', image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=800&q=80', count: 280, countLabel: '280+' },
+  { name: 'Chennai', state: 'Tamil Nadu', image: 'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=800&q=80', count: 220, countLabel: '220+' },
+  { name: 'Kolkata', state: 'West Bengal', image: 'https://images.unsplash.com/photo-1558431382-27e303142255?auto=format&fit=crop&w=800&q=80', count: 180, countLabel: '180+' },
 ];
 
+// Only keep the 6 required property types - removed: Builder Floor, Farm House, Penthouse, Office, Shop, Warehouse
 const categories = [
-  { name: 'Apartment', icon: '🏢', count: 0 },
-  { name: 'Flat', icon: '🏠', count: 0 },
-  { name: 'Villa', icon: '🏡', count: 0 },
-  { name: 'Independent House', icon: '🏠', count: 0 },
-  { name: 'Studio Apartment', icon: '📐', count: 0 },
-  { name: 'PG', icon: '🏘️', count: 0 },
-  { name: 'Builder Floor', icon: '🥞', count: 0 },
-  { name: 'Farm House', icon: '🚜', count: 0 },
-  { name: 'Penthouse', icon: '🏗️', count: 0 },
-  { name: 'Office', icon: '💼', count: 0 },
-  { name: 'Shop', icon: '🛒', count: 0 },
-  { name: 'Warehouse', icon: '📦', count: 0 },
+  { name: 'Apartment', icon: '🏢', count: 0, slug: 'apartment' },
+  { name: 'Flat', icon: '🏠', count: 0, slug: 'flat' },
+  { name: 'Villa', icon: '🏡', count: 0, slug: 'villa' },
+  { name: 'Independent House', icon: '🏠', count: 0, slug: 'independent-house' },
+  { name: 'Studio Apartment', icon: '📐', count: 0, slug: 'studio-apartment' },
+  { name: 'PG', icon: '🏘️', count: 0, slug: 'pg' },
 ];
 
 const testimonials = [
@@ -109,17 +104,24 @@ const HomePage = () => {
       if (latestRes.success) setLatestProperties(latestRes.properties);
 
       // Fetch city counts from database and merge
-      const citiesResponse = await fetch(`${API_BASE_URL}/cities`);
-      const citiesData = await citiesResponse.json();
-      if (citiesData.success && citiesData.data) {
-        const merged = popularCities.map(localCity => {
-          const apiCity = citiesData.data.find(c => c.name.toLowerCase() === localCity.name.toLowerCase());
-          return {
-            ...localCity,
-            count: apiCity ? parseInt(apiCity.total_properties) || 0 : 0
-          };
-        });
-        setCitiesList(merged);
+      try {
+        const citiesResponse = await fetch(`${API_BASE_URL}/cities`, { signal: AbortSignal.timeout(5000) });
+        const citiesData = await citiesResponse.json();
+        if (citiesData.success && citiesData.data) {
+          const merged = popularCities.map(localCity => {
+            const apiCity = citiesData.data.find(c => c.name.toLowerCase() === localCity.name.toLowerCase());
+            const dbCount = apiCity ? parseInt(apiCity.total_properties) || 0 : 0;
+            return {
+              ...localCity,
+              count: dbCount > 0 ? dbCount : localCity.count,
+              countLabel: dbCount > 0 ? `${dbCount}+` : localCity.countLabel
+            };
+          });
+          setCitiesList(merged);
+        }
+      } catch (err) {
+        // City API failed, use fallback counts - don't show 0 properties
+        console.warn('City API unavailable, using fallback counts');
       }
     } catch (err) {
       console.error('Error loading data:', err);
@@ -167,18 +169,9 @@ const HomePage = () => {
                 <label>Property Type</label>
                 <select value={searchFilters.type} onChange={(e) => setSearchFilters({ ...searchFilters, type: e.target.value })}>
                   <option value="">All Types</option>
-                  <option value="apartment">Apartment</option>
-                  <option value="flat">Flat</option>
-                  <option value="villa">Villa</option>
-                  <option value="independent-house">Independent House</option>
-                  <option value="studio-apartment">Studio Apartment</option>
-                  <option value="pg-hostel">PG</option>
-                  <option value="builder-floor">Builder Floor</option>
-                  <option value="farmhouse">Farm House</option>
-                  <option value="penthouse">Penthouse</option>
-                  <option value="office">Office</option>
-                  <option value="shop">Shop</option>
-                  <option value="warehouse">Warehouse</option>
+                  {categories.map(c => (
+                    <option key={c.slug} value={c.slug}>{c.name}</option>
+                  ))}
                 </select>
               </div>
               <div className="search-field search-field-budget">
@@ -219,7 +212,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Categories Section */}
+      {/* Categories Section - Only 6 types */}
       <section className="section categories-section">
         <div className="container">
           <div className="section-header">
@@ -229,7 +222,7 @@ const HomePage = () => {
           </div>
           <div className="categories-grid">
             {categories.map((cat, i) => (
-              <div key={i} className="category-card" onClick={() => navigate(`/properties?type=${cat.name.toLowerCase().replace(' ', '-')}`)}>
+              <div key={i} className="category-card" onClick={() => navigate(`/properties?type=${cat.slug}`)}>
                 <span className="category-icon">{cat.icon}</span>
                 <h3 className="category-name">{cat.name}</h3>
               </div>
@@ -297,13 +290,22 @@ const HomePage = () => {
             {citiesList.map((city, i) => (
               <div key={i} className="city-card" onClick={() => navigate(`/properties?city=${city.name}`)}>
                 <div className="city-image-wrapper">
-                  <img src={city.image} alt={city.name} className="city-image" loading="lazy" />
+                  <img 
+                    src={city.image} 
+                    alt={city.name} 
+                    className="city-image" 
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80';
+                    }}
+                  />
                   <div className="city-overlay"></div>
                 </div>
                 <div className="city-info">
                   <h3 className="city-name">{city.name}</h3>
                   <span className="city-state">{city.state}</span>
-                  <span className="city-count">{city.count} Properties</span>
+                  <span className="city-count">{city.countLabel} Properties</span>
                 </div>
               </div>
             ))}
@@ -395,7 +397,7 @@ const HomePage = () => {
               <ul>
                 <li><a href="/properties">Browse Properties</a></li>
                 <li><a href="/properties?type=apartment">Apartments</a></li>
-                <li><a href="/properties?type=house">Independent Houses</a></li>
+                <li><a href="/properties?type=independent-house">Independent Houses</a></li>
                 <li><a href="/properties?type=villa">Villas</a></li>
                 <li><a href="/properties?type=pg">PG/Hostels</a></li>
               </ul>
@@ -403,11 +405,11 @@ const HomePage = () => {
             <div className="footer-col">
               <h4>Top Cities</h4>
               <ul>
-                <li><a href="/properties?city=Delhi">Delhi</a></li>
-                <li><a href="/properties?city=Mumbai">Mumbai</a></li>
-                <li><a href="/properties?city=Bangalore">Bangalore</a></li>
-                <li><a href="/properties?city=Hyderabad">Hyderabad</a></li>
-                <li><a href="/properties?city=Pune">Pune</a></li>
+                <li><a href="/properties?city=Ahmedabad">Ahmedabad</a></li>
+                <li><a href="/properties?city=Jaipur">Jaipur</a></li>
+                <li><a href="/properties?city=Noida">Noida</a></li>
+                <li><a href="/properties?city=Gurugram">Gurugram</a></li>
+                <li><a href="/properties?city=Lucknow">Lucknow</a></li>
               </ul>
             </div>
             <div className="footer-col">

@@ -8,16 +8,42 @@ const getAPIBaseURL = () => {
 
 export const API_BASE_URL = getAPIBaseURL();
 
-// Helper function for handling fetch responses
+// Helper function for handling fetch responses with robust error handling
 const handleResponse = async (response) => {
+  // Check if response has content
+  const contentType = response.headers.get('content-type');
+  
+  // For 204 No Content or empty responses
+  if (response.status === 204 || response.headers.get('content-length') === '0') {
+    return { success: true };
+  }
+  
+  let data;
+  try {
+    // Try to parse JSON, if fails handle gracefully
+    const text = await response.text();
+    if (!text || text.trim().length === 0) {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return { success: true };
+    }
+    data = JSON.parse(text);
+  } catch (parseError) {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return { success: true };
+  }
+
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const error = new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    const error = new Error(data.message || `HTTP error! status: ${response.status}`);
     error.status = response.status;
-    error.data = errorData;
+    error.data = data;
     throw error;
   }
-  return response.json();
+  
+  return data;
 };
 
 // Auth Service

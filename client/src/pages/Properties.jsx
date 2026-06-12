@@ -4,6 +4,18 @@ import { propertyService } from '../services/api';
 import PropertyCard from '../components/property/PropertyCard';
 import './Properties.css';
 
+const POPULAR_CITIES = ['Delhi','Noida','Greater Noida','Gurugram','Mumbai','Pune','Bangalore','Hyderabad','Chennai','Kolkata','Ahmedabad','Jaipur','Lucknow','Chandigarh'];
+
+// Only the 6 required property types
+const PROPERTY_TYPES = [
+  { value: 'apartment', label: 'Apartment' },
+  { value: 'flat', label: 'Flat' },
+  { value: 'villa', label: 'Villa' },
+  { value: 'independent-house', label: 'Independent House' },
+  { value: 'studio-apartment', label: 'Studio Apartment' },
+  { value: 'pg', label: 'PG' },
+];
+
 const Properties = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -86,25 +98,16 @@ const Properties = () => {
               <label>City</label>
               <select value={filters.city} onChange={(e) => handleFilterChange('city', e.target.value)}>
                 <option value="">All Cities</option>
-                {['Delhi','Noida','Greater Noida','Gurugram','Mumbai','Pune','Bangalore','Hyderabad','Chennai','Kolkata','Ahmedabad','Jaipur','Lucknow','Chandigarh'].map(c => <option key={c} value={c}>{c}</option>)}
+                {POPULAR_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div className="filter-group">
               <label>Property Type</label>
               <select value={filters.property_type} onChange={(e) => handleFilterChange('property_type', e.target.value)}>
                 <option value="">All Types</option>
-                <option value="apartment">Apartment</option>
-                <option value="flat">Flat</option>
-                <option value="villa">Villa</option>
-                <option value="independent-house">Independent House</option>
-                <option value="studio-apartment">Studio Apartment</option>
-                <option value="pg">PG</option>
-                <option value="builder-floor">Builder Floor</option>
-                <option value="farm-house">Farm House</option>
-                <option value="penthouse">Penthouse</option>
-                <option value="office">Office</option>
-                <option value="shop">Shop</option>
-                <option value="warehouse">Warehouse</option>
+                {PROPERTY_TYPES.map(t => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
               </select>
             </div>
             <div className="filter-group">

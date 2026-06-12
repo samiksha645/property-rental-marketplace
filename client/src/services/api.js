@@ -22,36 +22,67 @@ const API_BASE_URL = getAPIBaseURL();
 
 // Helper function for handling fetch responses
 const handleResponse = async (response) => {
+  // Handle empty responses gracefully
+  const contentType = response.headers.get('content-type');
+  
+  if (response.status === 204 || response.headers.get('content-length') === '0') {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return {};
+  }
+  
+  let data;
+  try {
+    const text = await response.text();
+    if (!text || text.trim().length === 0) {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return {};
+    }
+    data = JSON.parse(text);
+  } catch (parseError) {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return {};
+  }
+  
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const error = new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    const error = new Error(data.message || `HTTP error! status: ${response.status}`);
     error.status = response.status;
-    error.data = errorData;
+    error.data = data;
     throw error;
   }
-  return response.json();
+  
+  return data;
+};
+
+// Create an AbortController-compatible timeout
+const createTimeoutSignal = (timeoutMs) => {
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), timeoutMs);
+  return controller.signal;
 };
 
 // Generic fetch wrapper with timeout
-const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
+const fetchWithTimeout = async (url, options = {}, timeout = 15000) => {
+  const signal = createTimeoutSignal(timeout);
   
   try {
     const response = await fetch(url, {
       ...options,
-      signal: controller.signal,
+      signal,
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
       },
     });
-    clearTimeout(timeoutId);
     return response;
   } catch (error) {
-    clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
-      throw new Error('Request timeout. Please try again.');
+      throw new Error('Request timed out. Please try again.');
     }
     throw error;
   }

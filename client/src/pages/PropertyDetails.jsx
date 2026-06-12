@@ -7,6 +7,8 @@ import { useAuth } from '../context/AuthContext';
 import PropertyCard from '../components/property/PropertyCard';
 import './PropertyDetails.css';
 
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80';
+
 const PropertyDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -18,11 +20,12 @@ const PropertyDetails = () => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [similarProperties, setSimilarProperties] = useState([]);
   
-  // Gallery slider state
+  // Gallery state
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [imageErrors, setImageErrors] = useState({});
   
-  // Leaflet map loading state
+  // Map loading state
   const [mapLoaded, setMapLoaded] = useState(false);
 
   useEffect(() => {
@@ -120,11 +123,20 @@ const PropertyDetails = () => {
     console.error('Booking error:', error);
   };
 
+  // Get safe image URL with fallback
+  const getSafeImageUrl = (img, index = 0) => {
+    if (imageErrors[index]) return FALLBACK_IMAGE;
+    return img || FALLBACK_IMAGE;
+  };
+
+  const handleImageError = (index) => {
+    setImageErrors(prev => ({ ...prev, [index]: true }));
+  };
+
   // Dynamically load Leaflet Map
   useEffect(() => {
     if (!property || !property.latitude || !property.longitude) return;
     
-    // Load Leaflet CSS
     if (!document.getElementById('leaflet-css')) {
       const link = document.createElement('link');
       link.id = 'leaflet-css';
@@ -133,7 +145,6 @@ const PropertyDetails = () => {
       document.head.appendChild(link);
     }
     
-    // Load Leaflet JS
     if (!document.getElementById('leaflet-js')) {
       const script = document.createElement('script');
       script.id = 'leaflet-js';
@@ -152,7 +163,6 @@ const PropertyDetails = () => {
         const lat = parseFloat(property.latitude);
         const lng = parseFloat(property.longitude);
         
-        // Leaflet expects L to be globally defined
         if (window.L) {
           const map = window.L.map('property-map').setView([lat, lng], 14);
           
@@ -265,7 +275,7 @@ const PropertyDetails = () => {
                 </span>
                 <span>•</span>
                 <span style={{ fontWeight: '600', color: 'var(--primary)' }}>
-                  {property.property_type.charAt(0).toUpperCase() + property.property_type.slice(1).replace('-', ' ')}
+                  {property.property_type ? (property.property_type.charAt(0).toUpperCase() + property.property_type.slice(1).replace('-', ' ')) : 'Property'}
                 </span>
               </div>
             </div>
@@ -284,35 +294,43 @@ const PropertyDetails = () => {
           </div>
         </div>
 
-        {/* Premium Airbnb style Image Gallery */}
+        {/* Modern Image Gallery - No "Show All Photos" button */}
         <div className="gallery-container">
           {images.length > 0 ? (
-            <div className="gallery-grid-5">
-              <div className="gallery-main-item" onClick={() => openSlider(0)}>
-                <img src={images[0]} alt={`${property.title} main`} />
-              </div>
-              {images.slice(1, 5).map((img, index) => (
-                <div key={index} onClick={() => openSlider(index + 1)}>
-                  <img src={img} alt={`${property.title} thumbnail ${index + 1}`} />
+            <div className={`gallery-grid ${images.length >= 2 ? 'gallery-grid-2' : ''}`}>
+              {images.slice(0, 2).map((img, index) => (
+                <div key={index} className="gallery-item" onClick={() => openSlider(index)}>
+                  <img 
+                    src={getSafeImageUrl(img, index)} 
+                    alt={`${property.title} view ${index + 1}`}
+                    onError={() => handleImageError(index)}
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                  />
+                  {images.length > 2 && index === 1 && (
+                    <div className="gallery-more-overlay" onClick={() => openSlider(0)}>
+                      <span>+{images.length - 2} more</span>
+                    </div>
+                  )}
                 </div>
               ))}
-              {/* Fill remaining slots with placeholder if less than 5 images */}
-              {images.length < 5 && [...Array(5 - images.length)].map((_, i) => (
-                <div key={`placeholder-${i}`} style={{ backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
-                  🏡
+              {images.length === 1 && (
+                <div className="gallery-item gallery-item-full" onClick={() => openSlider(0)}>
+                  <img 
+                    src={getSafeImageUrl(images[0], 0)} 
+                    alt={`${property.title} main`}
+                    onError={() => handleImageError(0)}
+                  />
                 </div>
-              ))}
+              )}
             </div>
           ) : (
-            <div style={{ height: '300px', backgroundColor: '#f1f5f9', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '2rem' }}>
-              🏡 No Images Available
+            <div className="gallery-no-image">
+              <img 
+                src={FALLBACK_IMAGE} 
+                alt="Property" 
+                className="gallery-fallback-image"
+              />
             </div>
-          )}
-          
-          {images.length > 0 && (
-            <button className="show-all-photos-btn" onClick={() => openSlider(0)}>
-              🖼️ Show all {images.length} photos
-            </button>
           )}
         </div>
 
@@ -351,14 +369,14 @@ const PropertyDetails = () => {
                   <span className="spec-icon">🛋️</span>
                   <div className="spec-info">
                     <span className="spec-name">Furnishing</span>
-                    <span className="spec-val">{property.furnishing.replace('-', ' ')}</span>
+                    <span className="spec-val">{property.furnishing ? property.furnishing.replace('-', ' ') : 'Not specified'}</span>
                   </div>
                 </div>
                 <div className="spec-card">
                   <span className="spec-icon">🚗</span>
                   <div className="spec-info">
                     <span className="spec-name">Parking</span>
-                    <span className="spec-val">{property.parking.replace('-', ' ')}</span>
+                    <span className="spec-val">{property.parking ? property.parking.replace('-', ' ') : 'Not specified'}</span>
                   </div>
                 </div>
                 <div className="spec-card">
@@ -463,19 +481,19 @@ const PropertyDetails = () => {
             <div className="sidebar-booking-card">
               <div className="sidebar-price-display">
                 <div>
-                  <span className="sidebar-price-val">₹{parseFloat(property.monthly_rent).toLocaleString()}</span>
+                  <span className="sidebar-price-val">₹{parseFloat(property.monthly_rent || 0).toLocaleString()}</span>
                   <span className="sidebar-price-period"> / month</span>
                 </div>
               </div>
 
               <div className="sidebar-fee-details">
-                {parseFloat(property.security_deposit) > 0 && (
+                {parseFloat(property.security_deposit || 0) > 0 && (
                   <div className="sidebar-fee-row">
                     <span>Security Deposit</span>
                     <span>₹{parseFloat(property.security_deposit).toLocaleString()}</span>
                   </div>
                 )}
-                {parseFloat(property.maintenance) > 0 && (
+                {parseFloat(property.maintenance || 0) > 0 && (
                   <div className="sidebar-fee-row">
                     <span>Maintenance Fee</span>
                     <span>₹{parseFloat(property.maintenance).toLocaleString()}/mo</span>
@@ -555,15 +573,15 @@ const PropertyDetails = () => {
           <div className="lightbox-main">
             <button className="lightbox-nav-btn prev" onClick={prevImage}>◀</button>
             <img 
-              src={property.images[activeImageIndex]} 
+              src={getSafeImageUrl(property.images[activeImageIndex], activeImageIndex)} 
               alt={`${property.title} view ${activeImageIndex + 1}`} 
               className="lightbox-image"
+              onError={() => handleImageError(activeImageIndex)}
             />
             <button className="lightbox-nav-btn next" onClick={nextImage}>▶</button>
           </div>
 
           <div className="lightbox-nav-row" style={{ display: 'none' }}>
-            {/* Fallback navigation for mobile screens */}
             <button className="lightbox-nav-btn prev" onClick={prevImage}>◀</button>
             <button className="lightbox-nav-btn next" onClick={nextImage}>▶</button>
           </div>
