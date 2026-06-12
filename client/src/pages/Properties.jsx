@@ -97,10 +97,10 @@ const Properties = () => {
                 <option value="flat">Flat</option>
                 <option value="villa">Villa</option>
                 <option value="independent-house">Independent House</option>
-                <option value="studio">Studio Apartment</option>
+                <option value="studio-apartment">Studio Apartment</option>
                 <option value="pg">PG</option>
                 <option value="builder-floor">Builder Floor</option>
-                <option value="farmhouse">Farm House</option>
+                <option value="farm-house">Farm House</option>
                 <option value="penthouse">Penthouse</option>
                 <option value="office">Office</option>
                 <option value="shop">Shop</option>

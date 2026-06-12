@@ -2,18 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { propertyService } from '../services/api';
+import { API_BASE_URL } from '../services/authService';
 import PropertyCard from '../components/property/PropertyCard';
 import './HomePage.css';
 
 const popularCities = [
   { name: 'Delhi', state: 'Delhi', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=600&q=80', count: 0 },
   { name: 'Mumbai', state: 'Maharashtra', image: 'https://images.unsplash.com/photo-1529253355930-ddbe423a2ac7?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Bangalore', state: 'Karnataka', image: 'https://images.unsplash.com/photo-1596178060671-7a80dc8058f9?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Noida', state: 'Uttar Pradesh', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Gurugram', state: 'Haryana', image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Pune', state: 'Maharashtra', image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Hyderabad', state: 'Telangana', image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80', count: 0 },
-  { name: 'Chennai', state: 'Tamil Nadu', image: 'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?auto=format&fit=crop&w=600&q=80', count: 0 },
+  { name: 'Bangalore', state: 'Karnataka', image: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=600&q=80', count: 0 },
+  { name: 'Hyderabad', state: 'Telangana', image: 'https://images.unsplash.com/photo-1572445271230-a78b5944a659?auto=format&fit=crop&w=600&q=80', count: 0 },
+  { name: 'Pune', state: 'Maharashtra', image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=600&q=80', count: 0 },
+  { name: 'Chennai', state: 'Tamil Nadu', image: 'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=600&q=80', count: 0 },
+  { name: 'Kolkata', state: 'West Bengal', image: 'https://images.unsplash.com/photo-1558431382-27e303142255?auto=format&fit=crop&w=600&q=80', count: 0 },
+  { name: 'Ahmedabad', state: 'Gujarat', image: 'https://images.unsplash.com/photo-1627918392138-04ff531fb2d0?auto=format&fit=crop&w=600&q=80', count: 0 },
+  { name: 'Jaipur', state: 'Rajasthan', image: 'https://images.unsplash.com/photo-1477587458883-471a5ed94245?auto=format&fit=crop&w=600&q=80', count: 0 },
+  { name: 'Noida', state: 'Uttar Pradesh', image: 'https://images.unsplash.com/photo-1595841696667-aa68d601dd1a?auto=format&fit=crop&w=600&q=80', count: 0 },
+  { name: 'Gurugram', state: 'Haryana', image: 'https://images.unsplash.com/photo-1601579621360-685a21edd83a?auto=format&fit=crop&w=600&q=80', count: 0 },
+  { name: 'Lucknow', state: 'Uttar Pradesh', image: 'https://images.unsplash.com/photo-1598091857921-6b2d7a24badc?auto=format&fit=crop&w=600&q=80', count: 0 },
 ];
 
 const categories = [
@@ -86,6 +91,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFilters, setSearchFilters] = useState({ city: '', type: '', budget: '' });
+  const [citiesList, setCitiesList] = useState(popularCities);
 
   useEffect(() => {
     loadData();
@@ -101,6 +107,20 @@ const HomePage = () => {
       ]);
       if (featuredRes.success) setFeaturedProperties(featuredRes.properties);
       if (latestRes.success) setLatestProperties(latestRes.properties);
+
+      // Fetch city counts from database and merge
+      const citiesResponse = await fetch(`${API_BASE_URL}/cities`);
+      const citiesData = await citiesResponse.json();
+      if (citiesData.success && citiesData.data) {
+        const merged = popularCities.map(localCity => {
+          const apiCity = citiesData.data.find(c => c.name.toLowerCase() === localCity.name.toLowerCase());
+          return {
+            ...localCity,
+            count: apiCity ? parseInt(apiCity.total_properties) || 0 : 0
+          };
+        });
+        setCitiesList(merged);
+      }
     } catch (err) {
       console.error('Error loading data:', err);
     }
@@ -244,7 +264,7 @@ const HomePage = () => {
       </section>
 
       {/* Why Choose Us */}
-      <section className="section why-section">
+      <section id="services" className="section why-section">
         <div className="container">
           <div className="section-header">
             <span className="section-label">Why Choose Us</span>
@@ -266,7 +286,7 @@ const HomePage = () => {
       </section>
 
       {/* Popular Cities */}
-      <section className="section cities-section" style={{ background: 'var(--gray-50)' }}>
+      <section id="explore" className="section cities-section" style={{ background: 'var(--gray-50)' }}>
         <div className="container">
           <div className="section-header">
             <span className="section-label">Popular Locations</span>
@@ -274,7 +294,7 @@ const HomePage = () => {
             <p className="section-subtitle">Find rental properties in India's most popular cities</p>
           </div>
           <div className="cities-grid">
-            {popularCities.slice(0, 8).map((city, i) => (
+            {citiesList.map((city, i) => (
               <div key={i} className="city-card" onClick={() => navigate(`/properties?city=${city.name}`)}>
                 <div className="city-image-wrapper">
                   <img src={city.image} alt={city.name} className="city-image" loading="lazy" />
@@ -283,6 +303,7 @@ const HomePage = () => {
                 <div className="city-info">
                   <h3 className="city-name">{city.name}</h3>
                   <span className="city-state">{city.state}</span>
+                  <span className="city-count">{city.count} Properties</span>
                 </div>
               </div>
             ))}
@@ -311,7 +332,7 @@ const HomePage = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="section testimonials-section" style={{ background: '#0f172a' }}>
+      <section id="about" className="section testimonials-section" style={{ background: '#0f172a' }}>
         <div className="container">
           <div className="section-header">
             <span className="section-label" style={{ background: 'rgba(37,99,235,0.2)', color: '#60a5fa' }}>Testimonials</span>
@@ -356,7 +377,7 @@ const HomePage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="footer">
+      <footer id="contact" className="footer">
         <div className="container">
           <div className="footer-grid">
             <div className="footer-col footer-brand">

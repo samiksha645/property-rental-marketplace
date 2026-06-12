@@ -75,8 +75,18 @@ class PropertyModel {
       values.push(`%${filters.locality}%`);
     }
     if (filters.property_type) {
-      conditions.push(`p.property_type = $${paramCounter++}`);
-      values.push(filters.property_type);
+      let typeVal = filters.property_type;
+      if (typeVal === 'studio-apartment') typeVal = 'studio';
+      if (typeVal === 'pg') typeVal = 'pg-hostel';
+      if (typeVal === 'farm-house') typeVal = 'farmhouse';
+      
+      conditions.push(`(p.property_type = $${paramCounter++} OR p.property_type = $${paramCounter++})`);
+      let altVal = typeVal;
+      if (typeVal === 'studio') altVal = 'studio-apartment';
+      if (typeVal === 'pg-hostel') altVal = 'pg';
+      if (typeVal === 'farmhouse') altVal = 'farm-house';
+      
+      values.push(typeVal, altVal);
     }
     if (filters.category_id) {
       conditions.push(`p.category_id = $${paramCounter++}`);

@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Header from './components/layout/Header';
 import HomePage from './pages/HomePage';
@@ -18,6 +18,27 @@ import AdminCategories from './pages/admin/Categories';
 import AdminCities from './pages/admin/Cities';
 import AdminLayout from './components/admin/AdminLayout';
 import './index.css';
+
+// Scroll to hash element helper
+const ScrollToHash = () => {
+  const { hash, pathname } = useLocation();
+
+  useEffect(() => {
+    if (hash) {
+      // Small timeout to allow element to render first
+      setTimeout(() => {
+        const element = document.getElementById(hash.substring(1));
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 200);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [hash, pathname]);
+
+  return null;
+};
 
 // Protected Route
 const ProtectedRoute = ({ children }) => {
@@ -69,6 +90,7 @@ const AppContent = () => {
 const App = () => (
   <Router>
     <AuthProvider>
+      <ScrollToHash />
       <AppContent />
     </AuthProvider>
   </Router>

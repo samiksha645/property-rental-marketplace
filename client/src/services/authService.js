@@ -6,7 +6,7 @@ const getAPIBaseURL = () => {
   return 'https://property-rental-market.onrender.com/api/v1';
 };
 
-const API_BASE_URL = getAPIBaseURL();
+export const API_BASE_URL = getAPIBaseURL();
 
 // Helper function for handling fetch responses
 const handleResponse = async (response) => {

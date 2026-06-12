@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { adminService } from '../../services/authService';
+import { adminService, API_BASE_URL } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 import './AdminCommon.css';
 
@@ -17,7 +17,7 @@ const Categories = () => {
   const loadCategories = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/v1/categories');
+      const response = await fetch(`${API_BASE_URL}/categories`);
       const data = await response.json();
       if (data.success) {
         setCategories(data.data);

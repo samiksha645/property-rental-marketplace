@@ -32,7 +32,12 @@ const Header = () => {
         </Link>
 
         <nav className={`header-nav ${menuOpen ? 'open' : ''}`}>
-          <Link to="/properties" className="nav-link" onClick={() => setMenuOpen(false)}>Browse</Link>
+          <Link to="/" className="nav-link" onClick={() => setMenuOpen(false)}>Home</Link>
+          <Link to="/properties" className="nav-link" onClick={() => setMenuOpen(false)}>Properties</Link>
+          <Link to="/#explore" className="nav-link" onClick={() => setMenuOpen(false)}>Explore</Link>
+          <Link to="/#services" className="nav-link" onClick={() => setMenuOpen(false)}>Services</Link>
+          <Link to="/#about" className="nav-link" onClick={() => setMenuOpen(false)}>About</Link>
+          <Link to="/#contact" className="nav-link" onClick={() => setMenuOpen(false)}>Contact</Link>
           {isAuthenticated && (
             <>
               <Link to="/wishlist" className="nav-link" onClick={() => setMenuOpen(false)}>Wishlist</Link>

@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import PropertyCard from '../../components/property/PropertyCard';
-
-const API_BASE_URL = 'http://localhost:5000/api/v1';
+import { API_BASE_URL } from '../../services/authService';
 
 const WishlistPage = () => {
   const { token } = useAuth();
