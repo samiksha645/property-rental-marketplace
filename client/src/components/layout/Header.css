@@ -123,6 +123,10 @@
   gap: 8px;
 }
 
+.mobile-auth-actions {
+  display: none;
+}
+
 /* ===== HAMBURGER BUTTON ===== */
 .header-mobile-menu {
   display: none;
@@ -353,6 +357,7 @@
 
   /* Mobile Auth Actions */
   .mobile-auth-actions {
+    display: block;
     padding: 16px 20px 24px;
     border-top: 1px solid var(--gray-100);
     flex-shrink: 0;

@@ -83,5 +83,24 @@ const optionalAuthMiddleware = (req, res, next) => {
   }
 };
 
+const requireRole = (role) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized. Authenticated session required.',
+      });
+    }
+    if (req.user.role !== role) {
+      return res.status(403).json({
+        success: false,
+        message: `Forbidden. Requires ${role} role.`,
+      });
+    }
+    next();
+  };
+};
+
 module.exports = authMiddleware;
 module.exports.optionalAuthMiddleware = optionalAuthMiddleware;
+module.exports.requireRole = requireRole;

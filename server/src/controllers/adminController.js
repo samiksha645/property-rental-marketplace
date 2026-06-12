@@ -15,14 +15,48 @@ const getDashboardStats = async (req, res, next) => {
     // Get booking stats
     const bookingStats = await BookingModel.getStats();
 
-    // Calculate revenue (sum of all confirmed bookings)
+    // Calculate total revenue
     const revenueSql = `
-      SELECT 
-        COALESCE(SUM(total_amount), 0) as total_revenue
+      SELECT COALESCE(SUM(total_amount), 0) as total_revenue
       FROM bookings 
-      WHERE status IN ('confirmed', 'completed')
+      WHERE status IN ('confirmed', 'approved', 'completed')
     `;
     const revenueResult = await query(revenueSql);
+
+    // Calculate monthly revenue (this month)
+    const monthlyRevenueSql = `
+      SELECT COALESCE(SUM(total_amount), 0) as monthly_revenue
+      FROM bookings 
+      WHERE status IN ('confirmed', 'approved', 'completed')
+        AND created_at >= DATE_TRUNC('month', CURRENT_DATE)
+    `;
+    const monthlyRevenueResult = await query(monthlyRevenueSql);
+
+    // Calculate new users (last 30 days)
+    const newUsersSql = `
+      SELECT COUNT(*) as new_users 
+      FROM users 
+      WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+    `;
+    const newUsersResult = await query(newUsersSql);
+
+    // Get recent activity: new users
+    const recentUsersSql = `
+      SELECT id, name, email, created_at 
+      FROM users 
+      ORDER BY created_at DESC 
+      LIMIT 5
+    `;
+    const recentUsersResult = await query(recentUsersSql);
+
+    // Get recent activity: new property submissions
+    const recentPropertiesSql = `
+      SELECT id, title, owner_name, monthly_rent, created_at 
+      FROM properties 
+      ORDER BY created_at DESC 
+      LIMIT 5
+    `;
+    const recentPropertiesResult = await query(recentPropertiesSql);
 
     // Get recent bookings
     const recentBookingsSql = `
@@ -32,7 +66,7 @@ const getDashboardStats = async (req, res, next) => {
       JOIN properties p ON b.property_id = p.id
       JOIN users u ON b.guest_id = u.id
       ORDER BY b.created_at DESC
-      LIMIT 10
+      LIMIT 5
     `;
     const recentBookingsResult = await query(recentBookingsSql);
 
@@ -41,11 +75,24 @@ const getDashboardStats = async (req, res, next) => {
       data: {
         stats: {
           totalUsers: parseInt(userStats.total_users),
+          activeUsers: parseInt(userStats.active_users),
+          newUsers: parseInt(newUsersResult.rows[0].new_users),
+          
           totalProperties: parseInt(propertyStats.total_properties),
+          activeProperties: parseInt(propertyStats.active_properties),
+          pendingProperties: parseInt(propertyStats.total_properties) - parseInt(propertyStats.active_properties),
+          
           totalBookings: parseInt(bookingStats.total_bookings),
+          pendingBookings: parseInt(bookingStats.pending_bookings),
+          approvedBookings: parseInt(bookingStats.confirmed_bookings) + parseInt(bookingStats.active_bookings) + parseInt(bookingStats.completed_bookings),
+          rejectedBookings: parseInt(bookingStats.cancelled_bookings), // representing non-approved/cancelled/rejected
+          
           totalRevenue: parseFloat(revenueResult.rows[0].total_revenue),
+          monthlyRevenue: parseFloat(monthlyRevenueResult.rows[0].monthly_revenue),
           avgBookingValue: parseFloat(bookingStats.avg_booking_value),
         },
+        recentUsers: recentUsersResult.rows,
+        recentProperties: recentPropertiesResult.rows,
         recentBookings: recentBookingsResult.rows,
       },
     });
