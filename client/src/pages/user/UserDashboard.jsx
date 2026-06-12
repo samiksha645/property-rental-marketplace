@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { bookingService } from '../../services/api';
+import { bookingService, propertyService } from '../../services/api';
 import { authService, API_BASE_URL } from '../../services/authService';
 import PropertyCard from '../../components/property/PropertyCard';
+import AddPropertyForm from '../../components/property/AddPropertyForm';
 import './UserDashboard.css';
 
 const UserDashboard = () => {
@@ -20,6 +21,12 @@ const UserDashboard = () => {
   // Wishlist list state
   const [wishlistItems, setWishlistItems] = useState([]);
   const [loadingWishlist, setLoadingWishlist] = useState(false);
+
+  // My Properties (Landlord listings) state
+  const [myProperties, setMyProperties] = useState([]);
+  const [loadingMyProperties, setLoadingMyProperties] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingProperty, setEditingProperty] = useState(null);
   
   // Profile edit forms state
   const [profileForm, setProfileForm] = useState({
@@ -46,6 +53,8 @@ const UserDashboard = () => {
   useEffect(() => {
     if (activeTab === 'wishlist') {
       loadWishlist();
+    } else if (activeTab === 'listings') {
+      loadMyProperties();
     }
   }, [activeTab]);
 
@@ -91,6 +100,21 @@ const UserDashboard = () => {
     setLoadingWishlist(false);
   };
 
+  const loadMyProperties = async () => {
+    if (!user?.id) return;
+    setLoadingMyProperties(true);
+    try {
+      // Find all active properties listed by this owner
+      const res = await propertyService.getAllProperties({ owner_id: user.id });
+      if (res.success) {
+        setMyProperties(res.properties);
+      }
+    } catch (err) {
+      console.error('Failed to load my properties:', err);
+    }
+    setLoadingMyProperties(false);
+  };
+
   const handleCancelBooking = async (bookingId) => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) return;
     try {
@@ -121,6 +145,21 @@ const UserDashboard = () => {
       }
     } catch (err) {
       console.error('Failed to remove from wishlist:', err);
+    }
+  };
+
+  const handleDeleteProperty = async (propertyId) => {
+    if (!window.confirm('Are you sure you want to delete this property listing? This action cannot be undone.')) return;
+    try {
+      const res = await propertyService.deleteProperty(propertyId, token);
+      if (res.success) {
+        setMyProperties(myProperties.filter(p => p.id !== propertyId));
+        alert('Property deleted successfully!');
+      } else {
+        alert(res.error || 'Failed to delete property');
+      }
+    } catch (err) {
+      alert('Error deleting property');
     }
   };
 
@@ -180,25 +219,31 @@ const UserDashboard = () => {
         <div className="dashboard-header">
           <div className="dashboard-header-title">
             <h1>My Dashboard</h1>
-            <p>Manage your bookings, wishlist, and profile details</p>
+            <p>Manage your bookings, wishlist, listed properties and profile details</p>
           </div>
           
-          <div className="dashboard-tabs">
+          <div className="dashboard-tabs" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '16px' }}>
             <button 
               className={`dashboard-tab-btn ${activeTab === 'bookings' ? 'active' : ''}`}
-              onClick={() => setActiveTab('bookings')}
+              onClick={() => { setActiveTab('bookings'); setShowAddForm(false); setEditingProperty(null); }}
             >
               📅 My Bookings
             </button>
             <button 
+              className={`dashboard-tab-btn ${activeTab === 'listings' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('listings'); setShowAddForm(false); setEditingProperty(null); }}
+            >
+              🏢 My Listings
+            </button>
+            <button 
               className={`dashboard-tab-btn ${activeTab === 'wishlist' ? 'active' : ''}`}
-              onClick={() => setActiveTab('wishlist')}
+              onClick={() => { setActiveTab('wishlist'); setShowAddForm(false); setEditingProperty(null); }}
             >
               ❤️ Wishlist
             </button>
             <button 
               className={`dashboard-tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
-              onClick={() => setActiveTab('profile')}
+              onClick={() => { setActiveTab('profile'); setShowAddForm(false); setEditingProperty(null); }}
             >
               👤 Edit Profile
             </button>
@@ -254,33 +299,33 @@ const UserDashboard = () => {
                 <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
-                      <th style={{ padding: '14px 18px', textAlign: 'left', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', fontWeight: '600', color: '#475569' }}>Property</th>
-                      <th style={{ padding: '14px 18px', textAlign: 'left', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', fontWeight: '600', color: '#475569' }}>City</th>
-                      <th style={{ padding: '14px 18px', textAlign: 'left', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', fontWeight: '600', color: '#475569' }}>Check-in</th>
-                      <th style={{ padding: '14px 18px', textAlign: 'left', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', fontWeight: '600', color: '#475569' }}>Check-out</th>
-                      <th style={{ padding: '14px 18px', textAlign: 'left', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', fontWeight: '600', color: '#475569' }}>Status</th>
-                      <th style={{ padding: '14px 18px', textAlign: 'left', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', fontWeight: '600', color: '#475569' }}>Rent Total</th>
-                      <th style={{ padding: '14px 18px', textAlign: 'left', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', fontWeight: '600', color: '#475569' }}>Actions</th>
+                      <th>Property</th>
+                      <th>City</th>
+                      <th>Check-in</th>
+                      <th>Check-out</th>
+                      <th>Status</th>
+                      <th>Rent Total</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {bookings.map(booking => (
                       <tr key={booking.id}>
-                        <td style={{ padding: '16px 18px', borderBottom: '1px solid #e2e8f0', fontWeight: '600', color: '#0f172a' }}>
-                          <Link to={`/property/${booking.property_id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                        <td>
+                          <Link to={`/property/${booking.property_id}`} style={{ fontWeight: '600', color: 'var(--primary)', textDecoration: 'none' }}>
                             {booking.property_title || `Property #${booking.property_id}`}
                           </Link>
                         </td>
-                        <td style={{ padding: '16px 18px', borderBottom: '1px solid #e2e8f0', color: '#475569' }}>{booking.city || '—'}</td>
-                        <td style={{ padding: '16px 18px', borderBottom: '1px solid #e2e8f0', color: '#475569' }}>{new Date(booking.check_in_date).toLocaleDateString()}</td>
-                        <td style={{ padding: '16px 18px', borderBottom: '1px solid #e2e8f0', color: '#475569' }}>{new Date(booking.check_out_date).toLocaleDateString()}</td>
-                        <td style={{ padding: '16px 18px', borderBottom: '1px solid #e2e8f0' }}>
+                        <td>{booking.city || '—'}</td>
+                        <td>{new Date(booking.check_in_date).toLocaleDateString()}</td>
+                        <td>{new Date(booking.check_out_date).toLocaleDateString()}</td>
+                        <td>
                           <span className={`status-badge status-${booking.status}`}>{booking.status}</span>
                         </td>
-                        <td style={{ padding: '16px 18px', borderBottom: '1px solid #e2e8f0', fontWeight: '600', color: '#0f172a' }}>
+                        <td style={{ fontWeight: '600' }}>
                           ₹{Number(booking.total_amount || 0).toLocaleString()}
                         </td>
-                        <td style={{ padding: '16px 18px', borderBottom: '1px solid #e2e8f0' }}>
+                        <td>
                           {booking.status === 'pending' && (
                             <button className="cancel-action-btn" onClick={() => handleCancelBooking(booking.id)}>
                               Cancel Request
@@ -292,6 +337,112 @@ const UserDashboard = () => {
                   </tbody>
                 </table>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* My Listed Properties Tab */}
+        {activeTab === 'listings' && (
+          <div className="dashboard-section-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+              <h2>My Listed Properties</h2>
+              {!showAddForm && !editingProperty && (
+                <button className="btn btn-primary" onClick={() => setShowAddForm(true)}>
+                  + Add New Listing
+                </button>
+              )}
+            </div>
+
+            {showAddForm && (
+              <AddPropertyForm 
+                onCancel={() => setShowAddForm(false)} 
+                onPropertyAdded={(p) => {
+                  setShowAddForm(false);
+                  loadMyProperties();
+                }}
+              />
+            )}
+
+            {editingProperty && (
+              <AddPropertyForm 
+                initialData={editingProperty}
+                onCancel={() => setEditingProperty(null)} 
+                onPropertyAdded={(p) => {
+                  setEditingProperty(null);
+                  loadMyProperties();
+                }}
+              />
+            )}
+
+            {!showAddForm && !editingProperty && (
+              <>
+                {loadingMyProperties ? (
+                  <div style={{ padding: '40px', textAlign: 'center' }} className="spinner"></div>
+                ) : myProperties.length === 0 ? (
+                  <div style={{ padding: '60px 20px', textAlign: 'center' }}>
+                    <span style={{ fontSize: '3rem', display: 'block', marginBottom: '16px' }}>🏘️</span>
+                    <h3>You haven't listed any property yet</h3>
+                    <p style={{ color: '#64748b', marginBottom: '24px' }}>List your property today and connect directly with tenants looking for spaces!</p>
+                    <button className="btn btn-primary" onClick={() => setShowAddForm(true)}>
+                      List Your Property Now
+                    </button>
+                  </div>
+                ) : (
+                  <div className="table-container">
+                    <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr>
+                          <th>Property Title</th>
+                          <th>Location</th>
+                          <th>Property Type</th>
+                          <th>Rent / Month</th>
+                          <th>Status</th>
+                          <th>Verified</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {myProperties.map(p => (
+                          <tr key={p.id}>
+                            <td style={{ fontWeight: '600' }}>
+                              <Link to={`/property/${p.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                                {p.title}
+                              </Link>
+                            </td>
+                            <td>{p.locality ? `${p.locality}, ` : ''}{p.city}</td>
+                            <td style={{ textTransform: 'capitalize' }}>{p.property_type?.replace('-', ' ')}</td>
+                            <td style={{ fontWeight: '600' }}>₹{Number(p.monthly_rent).toLocaleString()}</td>
+                            <td>
+                              <span className={`status-badge status-${p.is_active ? 'confirmed' : 'cancelled'}`}>
+                                {p.is_active ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                            <td style={{ fontWeight: 'bold', color: p.is_verified ? '#059669' : '#64748b' }}>
+                              {p.is_verified ? '✓ Yes' : 'Pending'}
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <button 
+                                  onClick={() => setEditingProperty(p)}
+                                  style={{ padding: '6px 12px', background: '#f1f5f9', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem' }}
+                                >
+                                  ✏️ Edit
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteProperty(p.id)}
+                                  style={{ padding: '6px 12px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem' }}
+                                >
+                                  🗑️ Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -312,33 +463,36 @@ const UserDashboard = () => {
               </div>
             ) : (
               <div className="properties-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
-                {wishlistItems.map(item => (
-                  <div key={item.id} style={{ position: 'relative' }}>
-                    <PropertyCard 
-                      property={item.property || item} 
-                      onPropertyClick={(pid) => navigate(`/property/${pid}`)}
-                    />
-                    <button
-                      onClick={() => handleRemoveWishlist(item.property_id || item.id)}
-                      style={{
-                        position: 'absolute',
-                        top: '10px',
-                        right: '10px',
-                        background: 'rgba(239, 68, 68, 0.95)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        padding: '6px 12px',
-                        fontSize: '0.75rem',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        zIndex: 10,
-                      }}
-                    >
-                      ✕ Remove
-                    </button>
-                  </div>
-                ))}
+                {wishlistItems.map(item => {
+                  const propertyData = item.property || item;
+                  return (
+                    <div key={item.id} style={{ position: 'relative' }}>
+                      <PropertyCard 
+                        property={propertyData} 
+                        onPropertyClick={(pid) => navigate(`/property/${pid}`)}
+                      />
+                      <button
+                        onClick={() => handleRemoveWishlist(propertyData.id || item.property_id)}
+                        style={{
+                          position: 'absolute',
+                          top: '10px',
+                          right: '10px',
+                          background: 'rgba(239, 68, 68, 0.95)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '6px 12px',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          zIndex: 10,
+                        }}
+                      >
+                        ✕ Remove
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

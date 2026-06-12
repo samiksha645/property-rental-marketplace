@@ -4,12 +4,12 @@ import { useAuth } from '../../context/AuthContext';
 import './Dashboard.css';
 
 const StatCard = ({ title, value, icon, color, trend }) => (
-  <div className={`stat-card stat-${color}`}>
-    <div className="stat-icon-box">{icon}</div>
+  <div className={`stat-card stat-${color}`} style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+    <div className="stat-icon-box" style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', background: `var(--${color}-50 || #f1f5f9)` }}>{icon}</div>
     <div className="stat-info">
-      <p className="stat-label">{title}</p>
-      <h3 className="stat-value">{value}</h3>
-      {trend && <span className="stat-trend">↑ {trend}</span>}
+      <p className="stat-label" style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>{title}</p>
+      <h3 className="stat-value" style={{ margin: '4px 0 0 0', fontSize: '1.5rem', fontWeight: '800', color: '#0f172a' }}>{value}</h3>
+      {trend && <span className="stat-trend" style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: '600' }}>{trend}</span>}
     </div>
   </div>
 );
@@ -43,16 +43,16 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="dashboard-loading">
-        <div className="spinner"></div>
-        <p>Loading dashboard...</p>
+      <div className="dashboard-loading" style={{ padding: '80px 20px', textAlign: 'center' }}>
+        <div className="spinner" style={{ display: 'inline-block' }}></div>
+        <p style={{ marginTop: '16px', color: '#64748b' }}>Loading dashboard...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="dashboard-error">
+      <div className="dashboard-error" style={{ padding: '80px 20px', textAlign: 'center' }}>
         <span>⚠️</span>
         <p>{error}</p>
         <button onClick={loadDashboardData} className="retry-btn">Retry</button>
@@ -68,51 +68,110 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="dashboard">
+    <div className="dashboard" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       <div className="dashboard-greeting">
-        <h2>Welcome back! 👋</h2>
-        <p>Here's what's happening with your marketplace today.</p>
+        <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#0f172a' }}>Admin Dashboard Panel</h2>
+        <p style={{ color: '#64748b', marginTop: '4px' }}>Real-time analytics, user control, and property rental verifications.</p>
       </div>
 
-      <div className="stats-grid">
+      {/* Stats Cards */}
+      <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px' }}>
         <StatCard
           title="Total Users"
           value={stats?.totalUsers?.toLocaleString() || '0'}
           icon="👥"
           color="blue"
-          trend="12% this month"
+          trend={`${stats?.newUsers || 0} registered recently`}
         />
         <StatCard
-          title="Total Properties"
-          value={stats?.totalProperties?.toLocaleString() || '0'}
+          title="Active Listings"
+          value={stats?.activeProperties?.toLocaleString() || '0'}
           icon="🏠"
           color="green"
-          trend="8 new this week"
+          trend={`${stats?.pendingProperties || 0} pending approvals`}
         />
         <StatCard
           title="Total Bookings"
           value={stats?.totalBookings?.toLocaleString() || '0'}
           icon="📅"
           color="purple"
-          trend="5% increase"
+          trend={`${stats?.pendingBookings || 0} pending bookings`}
         />
         <StatCard
           title="Total Revenue"
           value={formatCurrency(stats?.totalRevenue)}
           icon="💰"
           color="orange"
-          trend="from confirmed bookings"
+          trend={`₹${(stats?.monthlyRevenue || 0).toLocaleString()} this month`}
         />
       </div>
 
+      {/* Analytics Charts & Visual Analytics Section */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+        {/* Category Share Chart */}
+        <div style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '16px' }}>Category Breakdown</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '4px' }}>
+                <span>Apartments & Flats</span>
+                <strong>65%</strong>
+              </div>
+              <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ width: '65%', height: '100%', background: '#2563eb' }}></div>
+              </div>
+            </div>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '4px' }}>
+                <span>Villas & Independent Houses</span>
+                <strong>20%</strong>
+              </div>
+              <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ width: '20%', height: '100%', background: '#10b981' }}></div>
+              </div>
+            </div>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '4px' }}>
+                <span>PG & Shared Rooms</span>
+                <strong>15%</strong>
+              </div>
+              <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ width: '15%', height: '100%', background: '#8b5cf6' }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Verification Analytics */}
+        <div style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '16px' }}>Property Trust Analytics</h3>
+          <div style={{ display: 'flex', gap: '24px', alignItems: 'center', justifyContent: 'space-around', height: '100px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#059669' }}>
+                {stats?.totalProperties ? Math.round((stats.activeProperties / stats.totalProperties) * 100) : 100}%
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>Verified Properties</div>
+            </div>
+            <div style={{ width: '1px', height: '60px', background: '#e2e8f0' }}></div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#2563eb' }}>
+                {stats?.totalUsers ? Math.round((stats.activeUsers / stats.totalUsers) * 100) : 100}%
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>Active Landlords</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="dashboard-content-grid">
-        <div className="dashboard-section recent-bookings-section">
-          <div className="section-title-row">
-            <h3>Recent Bookings</h3>
-            <a href="/admin/bookings" className="view-all-link">View All →</a>
+        {/* Recent Bookings */}
+        <div className="dashboard-section recent-bookings-section" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+          <div className="section-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700' }}>Recent Booking Requests</h3>
+            <a href="/admin/bookings" className="view-all-link" style={{ fontSize: '0.875rem', color: 'var(--primary)', fontWeight: '600', textDecoration: 'none' }}>View All →</a>
           </div>
           {recentBookings.length === 0 ? (
-            <div className="empty-state">
+            <div className="empty-state" style={{ textAlign: 'center', padding: '40px' }}>
               <span>📅</span>
               <p>No recent bookings</p>
             </div>
@@ -122,7 +181,7 @@ const Dashboard = () => {
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>Guest</th>
+                    <th>Guest Name</th>
                     <th>Property</th>
                     <th>Check-in</th>
                     <th>Status</th>
@@ -130,13 +189,12 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentBookings.slice(0, 8).map((booking) => (
+                  {recentBookings.slice(0, 5).map((booking) => (
                     <tr key={booking.id}>
                       <td className="booking-id">#{booking.id}</td>
                       <td>
                         <div className="guest-cell">
-                          <div className="guest-avatar">{(booking.guest_name || 'U')[0]}</div>
-                          <span>{booking.guest_name || 'N/A'}</span>
+                          <span>{booking.guest_name || 'Anonymous User'}</span>
                         </div>
                       </td>
                       <td className="property-title-cell">
@@ -148,7 +206,7 @@ const Dashboard = () => {
                           {booking.status}
                         </span>
                       </td>
-                      <td className="amount-cell">₹{Number(booking.total_amount || 0).toLocaleString()}</td>
+                      <td className="amount-cell" style={{ fontWeight: '600' }}>₹{Number(booking.total_amount || 0).toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -157,46 +215,22 @@ const Dashboard = () => {
           )}
         </div>
 
-        <div className="dashboard-section quick-stats-section">
-          <div className="section-title-row">
-            <h3>Quick Stats</h3>
+        {/* Quick Actions Panel */}
+        <div className="dashboard-section quick-stats-section" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+          <div className="section-title-row" style={{ marginBottom: '20px' }}>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700' }}>System Administration</h3>
           </div>
-          <div className="quick-stat-list">
-            <div className="quick-stat-item">
-              <span className="qs-icon">✅</span>
-              <div className="qs-info">
-                <span className="qs-label">Avg Booking Value</span>
-                <span className="qs-value">{formatCurrency(stats?.avgBookingValue)}</span>
-              </div>
-            </div>
-            <div className="quick-stat-item">
-              <span className="qs-icon">🏙️</span>
-              <div className="qs-info">
-                <span className="qs-label">Cities Covered</span>
-                <span className="qs-value">14 Cities</span>
-              </div>
-            </div>
-            <div className="quick-stat-item">
-              <span className="qs-icon">⭐</span>
-              <div className="qs-info">
-                <span className="qs-label">Avg Rating</span>
-                <span className="qs-value">4.5 / 5.0</span>
-              </div>
-            </div>
-            <div className="quick-stat-item">
-              <span className="qs-icon">🔍</span>
-              <div className="qs-info">
-                <span className="qs-label">Verified Properties</span>
-                <span className="qs-value">~70%</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="quick-actions">
-            <h4>Quick Actions</h4>
-            <a href="/admin/properties" className="qa-btn qa-green">+ Add Property</a>
-            <a href="/admin/users" className="qa-btn qa-blue">👥 Manage Users</a>
-            <a href="/admin/bookings" className="qa-btn qa-purple">📅 View Bookings</a>
+          
+          <div className="quick-actions" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <a href="/admin/properties" className="qa-btn qa-green" style={{ padding: '12px', background: '#d1fae5', color: '#065f46', borderRadius: '8px', textDecoration: 'none', fontWeight: '600', textAlign: 'center' }}>
+              🏠 Verify Property Submissions
+            </a>
+            <a href="/admin/users" className="qa-btn qa-blue" style={{ padding: '12px', background: '#dbeafe', color: '#1e40af', borderRadius: '8px', textDecoration: 'none', fontWeight: '600', textAlign: 'center' }}>
+              👥 Manage Users & Blocklist
+            </a>
+            <a href="/admin/bookings" className="qa-btn qa-purple" style={{ padding: '12px', background: '#f3e8ff', color: '#6b21a8', borderRadius: '8px', textDecoration: 'none', fontWeight: '600', textAlign: 'center' }}>
+              📅 Manage Rental Bookings
+            </a>
           </div>
         </div>
       </div>

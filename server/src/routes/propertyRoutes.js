@@ -25,5 +25,6 @@ router.get('/:id', require('../middleware/auth').optionalAuthMiddleware, require
 router.post('/', authMiddleware, createProperty);
 router.put('/:id', authMiddleware, updateProperty);
 router.delete('/:id', authMiddleware, deleteProperty);
+router.post('/:id/reviews', authMiddleware, require('../controllers/propertyController').createReview);
 
 module.exports = router;

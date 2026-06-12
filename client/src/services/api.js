@@ -517,6 +517,23 @@ export const wishlistService = {
   },
 };
 
+// Review API Service
+export const reviewService = {
+  createReview: async (authToken, propertyId, reviewData) => {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/properties/${propertyId}/reviews`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${authToken}` },
+        body: JSON.stringify(reviewData),
+      });
+      const data = await handleResponse(response);
+      return { success: true, review: data.data, message: data.message };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+};
+
 // Utility function for offline detection
 export const isOnline = () => {
   return navigator.onLine;

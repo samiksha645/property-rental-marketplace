@@ -10,10 +10,11 @@ const getAllProperties = async (req, res, next) => {
       page = 1, limit = 20, city, state, locality, property_type,
       category_id, min_rent, max_rent, bedrooms, bathrooms,
       furnishing, parking, pet_friendly, is_verified, is_featured,
-      sort_by, sort_order, owner_id
+      sort_by, sort_order, owner_id, q
     } = req.query;
 
     const filters = {};
+    if (q) filters.q = q;
     if (city) filters.city = city;
     if (state) filters.state = state;
     if (locality) filters.locality = locality;
@@ -293,6 +294,38 @@ const getCategories = async (req, res, next) => {
   }
 };
 
+// Create review for property
+const createReview = async (req, res, next) => {
+  try {
+    const { id: property_id } = req.params;
+    const user_id = req.user?.id;
+    const { rating, comment } = req.body;
+
+    if (!user_id) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, message: 'Rating must be between 1 and 5' });
+    }
+
+    const review = await ReviewModel.create({
+      user_id,
+      property_id: parseInt(property_id),
+      rating: parseInt(rating),
+      comment
+    });
+
+    res.status(201).json({
+      success: true,
+      data: review,
+      message: 'Review submitted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAllProperties,
   searchProperties,
@@ -304,4 +337,5 @@ module.exports = {
   getPropertiesByCity,
   getCities,
   getCategories,
+  createReview,
 };

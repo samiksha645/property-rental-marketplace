@@ -125,6 +125,11 @@ class PropertyModel {
     if (filters.is_featured === 'true') {
       conditions.push('p.is_featured = true');
     }
+    if (filters.q) {
+      conditions.push(`(p.title ILIKE $${paramCounter} OR p.description ILIKE $${paramCounter} OR p.locality ILIKE $${paramCounter} OR p.city ILIKE $${paramCounter})`);
+      values.push(`%${filters.q}%`);
+      paramCounter++;
+    }
     if (filters.owner_id) {
       conditions.push(`p.owner_id = $${paramCounter++}`);
       values.push(parseInt(filters.owner_id));
