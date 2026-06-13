@@ -1,10 +1,8 @@
-const jwt = require('jsonwebtoken');
+const supabase = require('../config/supabase');
 const AppError = require('../utils/AppError');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_change_in_production';
-
 // Strict auth middleware - no fallback
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
     // Get token from header
     const authHeader = req.headers.authorization;
@@ -25,51 +23,46 @@ const authMiddleware = (req, res, next) => {
       });
     }
 
-    // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET);
+    // Verify token using Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired token.',
+      });
+    }
     
     // Attach user to request
     req.user = {
-      id: decoded.id,
-      email: decoded.email,
-      role: decoded.role,
+      id: user.id,
+      email: user.email,
+      role: user.user_metadata?.role || user.role || 'user',
     };
 
     next();
   } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid token.',
-      });
-    }
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        message: 'Token expired. Please login again.',
-      });
-    }
     next(error);
   }
 };
 
 // Optional auth middleware - sets user if token is valid, but doesn't require it
-const optionalAuthMiddleware = (req, res, next) => {
+const optionalAuthMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
       
-      try {
-        const decoded = jwt.verify(token, JWT_SECRET);
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      
+      if (!error && user) {
         req.user = {
-          id: decoded.id,
-          email: decoded.email,
-          role: decoded.role,
+          id: user.id,
+          email: user.email,
+          role: user.user_metadata?.role || user.role || 'user',
         };
-      } catch (err) {
-        // Token invalid, but that's okay for optional auth
+      } else {
         req.user = null;
       }
     } else {

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authService } from '../services/authService';
+import { supabase } from '../services/supabaseClient';
 
 const AuthContext = createContext(null);
 
@@ -13,56 +13,66 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Initialize auth state on mount
   useEffect(() => {
+    // Get current session
     const initAuth = async () => {
-      const storedToken = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
-
-      if (storedToken && storedUser) {
-        try {
-          // Verify token is still valid
-          const result = await authService.verifyToken(storedToken);
-          if (result.success) {
-            setUser(JSON.parse(storedUser));
-            setToken(storedToken);
-            setIsAuthenticated(true);
-          } else {
-            // Token invalid, clear storage
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-          }
-        } catch (error) {
-          console.error('Token verification failed:', error);
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (session) {
+        setUser(session.user);
+        setToken(session.access_token);
+        setIsAuthenticated(true);
+        // Sync user role from our public schema if needed, or rely on user metadata
+        if (session.user.user_metadata?.role) {
+          session.user.role = session.user.user_metadata.role;
         }
       }
       setLoading(false);
     };
 
     initAuth();
+
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session) {
+          setUser(session.user);
+          setToken(session.access_token);
+          setIsAuthenticated(true);
+          if (session.user.user_metadata?.role) {
+            session.user.role = session.user.user_metadata.role;
+          }
+        } else {
+          setUser(null);
+          setToken(null);
+          setIsAuthenticated(false);
+        }
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   // Login function
   const login = async (email, password) => {
     try {
-      const result = await authService.login(email, password);
-      
-      if (result.success) {
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('user', JSON.stringify(result.user));
-        setUser(result.user);
-        setToken(result.token);
-        setIsAuthenticated(true);
-        return { success: true, user: result.user };
-      } else {
-        return { success: false, error: result.error };
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
       }
+      return { success: true, user: data.user };
     } catch (error) {
       console.error('Login error:', error);
       return { success: false, error: error.message };
@@ -72,18 +82,23 @@ export const AuthProvider = ({ children }) => {
   // Register function
   const register = async (userData) => {
     try {
-      const result = await authService.register(userData);
-      
-      if (result.success) {
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('user', JSON.stringify(result.user));
-        setUser(result.user);
-        setToken(result.token);
-        setIsAuthenticated(true);
-        return { success: true, user: result.user };
-      } else {
-        return { success: false, error: result.error };
+      const { data, error } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          data: {
+            full_name: userData.full_name,
+            username: userData.username,
+            phone: userData.phone,
+            role: 'user' // Default role
+          }
+        }
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
       }
+      return { success: true, user: data.user };
     } catch (error) {
       console.error('Register error:', error);
       return { success: false, error: error.message };
@@ -93,33 +108,28 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      if (token) {
-        await authService.logout(token);
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      await supabase.auth.signOut();
       setUser(null);
       setToken(null);
       setIsAuthenticated(false);
+    } catch (error) {
+      console.error('Logout error:', error);
     }
   };
 
   // Update profile function
   const updateProfile = async (updates) => {
     try {
-      const result = await authService.updateProfile(token, updates);
+      const { data, error } = await supabase.auth.updateUser({
+        data: updates
+      });
       
-      if (result.success) {
-        const updatedUser = { ...user, ...result.user };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
-        return { success: true, user: updatedUser };
-      } else {
-        return { success: false, error: result.error };
+      if (error) {
+        return { success: false, error: error.message };
       }
+      
+      setUser(data.user);
+      return { success: true, user: data.user };
     } catch (error) {
       console.error('Update profile error:', error);
       return { success: false, error: error.message };
@@ -128,14 +138,12 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is admin
   const isAdmin = () => {
-    return user?.role === 'admin';
+    return user?.user_metadata?.role === 'admin' || user?.role === 'admin';
   };
 
   // Get authorization header
   const getAuthHeader = () => {
-    return {
-      Authorization: `Bearer ${token}`,
-    };
+    return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
   const value = {
