@@ -723,29 +723,293 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+
+/* Tablets */
+@media (max-width: 992px) {
   .admin-page-header {
     flex-direction: column;
+    gap: 12px;
   }
-  
+
   .form-grid-2 {
     grid-template-columns: 1fr;
   }
-  
+
   .admin-toolbar {
     flex-direction: column;
+    align-items: stretch;
   }
-  
+
   .search-box {
     max-width: 100%;
   }
-  
-  .data-table {
-    font-size: 13px;
+
+  .status-filter-group {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    padding-bottom: 2px;
   }
-  
+
+  .filter-tab {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .table-container {
+    border-radius: 10px;
+  }
+
   .data-table th,
   .data-table td {
     padding: 10px 12px;
+  }
+
+  .modal-content {
+    max-width: 90vw;
+    max-height: 85vh;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .admin-page-header h1 {
+    font-size: 20px;
+  }
+
+  .admin-page-header p {
+    font-size: 13px;
+  }
+
+  .admin-page-header .btn-primary {
+    width: 100%;
+    text-align: center;
+    padding: 12px 20px;
+  }
+
+  .search-box {
+    flex-direction: row;
+  }
+
+  .search-box input {
+    font-size: 14px;
+    padding: 10px 12px;
+    min-width: 0;
+  }
+
+  .search-box button {
+    padding: 10px 14px;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .status-filter-group {
+    gap: 2px;
+    padding: 3px;
+    border-radius: 8px;
+  }
+
+  .filter-tab {
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+
+  /* Make the table scroll horizontally on mobile */
+  .table-container {
+    border-radius: 8px;
+    margin: 0 -4px;
+  }
+
+  .data-table {
+    font-size: 12px;
+    min-width: 600px;
+  }
+
+  .data-table th {
+    font-size: 10px;
+    padding: 8px 10px;
+    letter-spacing: 0.3px;
+  }
+
+  .data-table td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .person-cell {
+    gap: 6px;
+  }
+
+  .person-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    font-size: 11px;
+  }
+
+  .person-name {
+    font-size: 12px;
+  }
+
+  .person-email {
+    font-size: 11px;
+  }
+
+  .property-name-cell {
+    max-width: 150px;
+  }
+
+  .status-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .role-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .type-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+  }
+
+  .flag-badges {
+    gap: 4px;
+  }
+
+  .flag-btn {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .action-buttons {
+    gap: 4px;
+  }
+
+  .edit-btn, .confirm-btn, .active-btn, .complete-btn,
+  .cancel-btn, .delete-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  /* Pagination */
+  .pagination {
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    margin-top: 16px;
+  }
+
+  .pagination button {
+    padding: 10px 16px;
+    font-size: 13px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .pagination span {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .modal-header {
+    padding: 16px 18px;
+  }
+
+  .modal-header h2 {
+    font-size: 16px;
+  }
+
+  .modal-body {
+    padding: 16px 18px;
+  }
+
+  .modal-footer {
+    padding: 12px 18px;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-footer .btn-cancel,
+  .modal-footer .btn-save {
+    width: 100%;
+    text-align: center;
+  }
+
+  .form-group label {
+    font-size: 12px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  /* Error */
+  .admin-error-msg {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    padding: 40px 16px;
+  }
+
+  .empty-state span {
+    font-size: 40px;
+  }
+
+  .empty-state h3 {
+    font-size: 16px;
+  }
+
+  .empty-state p {
+    font-size: 13px;
+  }
+}
+
+/* Very small mobile */
+@media (max-width: 380px) {
+  .admin-page-header h1 {
+    font-size: 18px;
+  }
+
+  .search-box input {
+    padding: 9px 10px;
+    font-size: 13px;
+  }
+
+  .search-box button {
+    padding: 9px 10px;
+    font-size: 12px;
+  }
+
+  .filter-tab {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .pagination {
+    padding: 10px;
   }
 }
