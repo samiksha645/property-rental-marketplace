@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { authService } from '../services/authService';
 
 const AuthContext = createContext(null);
 
@@ -13,132 +13,119 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('auth_token'));
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Initialize auth state on mount
   useEffect(() => {
-    // Get current session
     const initAuth = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (session) {
-        setUser(session.user);
-        setToken(session.access_token);
-        setIsAuthenticated(true);
-        // Sync user role from our public schema if needed, or rely on user metadata
-        if (session.user.user_metadata?.role) {
-          session.user.role = session.user.user_metadata.role;
+      const savedToken = localStorage.getItem('auth_token');
+      if (savedToken) {
+        try {
+          const result = await authService.verifyToken(savedToken);
+          if (result.success && result.user) {
+            setUser(result.user);
+            setToken(savedToken);
+            setIsAuthenticated(true);
+          } else {
+            // Token invalid, clear storage
+            localStorage.removeItem('auth_token');
+            setUser(null);
+            setToken(null);
+            setIsAuthenticated(false);
+          }
+        } catch (err) {
+          localStorage.removeItem('auth_token');
+          setUser(null);
+          setToken(null);
+          setIsAuthenticated(false);
         }
       }
       setLoading(false);
     };
 
     initAuth();
-
-    // Listen for auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session) {
-          setUser(session.user);
-          setToken(session.access_token);
-          setIsAuthenticated(true);
-          if (session.user.user_metadata?.role) {
-            session.user.role = session.user.user_metadata.role;
-          }
-        } else {
-          setUser(null);
-          setToken(null);
-          setIsAuthenticated(false);
-        }
-        setLoading(false);
-      }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
   }, []);
 
   // Login function
   const login = async (email, password) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        return { success: false, error: error.message };
+      const result = await authService.login(email, password);
+      if (result.success) {
+        setUser(result.user);
+        setToken(result.token);
+        setIsAuthenticated(true);
+        localStorage.setItem('auth_token', result.token);
+        return { success: true, user: result.user };
       }
-      return { success: true, user: data.user };
+      return { success: false, error: result.error };
     } catch (error) {
       console.error('Login error:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: error.message || 'An unexpected error occurred' };
     }
   };
 
   // Register function
   const register = async (userData) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const result = await authService.register({
+        name: userData.name || userData.full_name,
         email: userData.email,
         password: userData.password,
-        options: {
-          data: {
-            full_name: userData.full_name,
-            username: userData.username,
-            phone: userData.phone,
-            role: 'user' // Default role
-          }
-        }
+        phone: userData.phone || '',
       });
 
-      if (error) {
-        return { success: false, error: error.message };
+      if (result.success) {
+        setUser(result.user);
+        setToken(result.token);
+        setIsAuthenticated(true);
+        if (result.token) {
+          localStorage.setItem('auth_token', result.token);
+        }
+        return { success: true, user: result.user };
       }
-      return { success: true, user: data.user };
+      return { success: false, error: result.error };
     } catch (error) {
       console.error('Register error:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: error.message || 'An unexpected error occurred' };
     }
   };
 
   // Logout function
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      if (token) {
+        await authService.logout(token);
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
       setUser(null);
       setToken(null);
       setIsAuthenticated(false);
-    } catch (error) {
-      console.error('Logout error:', error);
+      localStorage.removeItem('auth_token');
     }
   };
 
   // Update profile function
   const updateProfile = async (updates) => {
     try {
-      const { data, error } = await supabase.auth.updateUser({
-        data: updates
-      });
-      
-      if (error) {
-        return { success: false, error: error.message };
+      const result = await authService.updateProfile(token, updates);
+      if (result.success) {
+        setUser(result.user);
+        return { success: true, user: result.user };
       }
-      
-      setUser(data.user);
-      return { success: true, user: data.user };
+      return { success: false, error: result.error };
     } catch (error) {
       console.error('Update profile error:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: error.message || 'Failed to update profile' };
     }
   };
 
   // Check if user is admin
   const isAdmin = () => {
-    return user?.user_metadata?.role === 'admin' || user?.role === 'admin';
+    return user?.role === 'admin';
   };
 
   // Get authorization header
