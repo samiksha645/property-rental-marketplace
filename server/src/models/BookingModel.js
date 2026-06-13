@@ -14,12 +14,14 @@ class BookingModel {
         monthly_rent, security_deposit, maintenance_fee, total_amount,
         guest_count, special_requests, status, payment_status
       ) 
-      SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
+      SELECT $1::integer, $2::integer, $3::integer, $4::date, $5::date, 
+             $6::numeric, $7::numeric, $8::numeric, $9::numeric, 
+             $10::integer, $11::text, $12::varchar, $13::varchar
       WHERE NOT EXISTS (
         SELECT 1 FROM bookings 
         WHERE property_id = $1 
         AND status NOT IN ('cancelled')
-        AND check_in_date < $5 AND check_out_date > $4
+        AND check_in_date < $5::date AND check_out_date > $4::date
       )
       RETURNING *
     `;
