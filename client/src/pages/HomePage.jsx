@@ -289,7 +289,7 @@ const HomePage = () => {
           <div className="section-header">
             <span className="section-label">Popular Locations</span>
             <h2 className="section-title">Explore Tech Hubs</h2>
-            <p className="section-subtitle">Find premium rental options near IT Parks, business complexes, and top colleges.</p>
+            <p className="section-subtitle" style={{ textAlign: 'center', width: '100%' }}>Find premium rental options near IT Parks, business complexes, and top colleges.</p>
           </div>
           <div className="cities-grid">
             {citiesList.map((city, i) => (
@@ -324,7 +324,7 @@ const HomePage = () => {
           <div className="section-header">
             <span className="section-label">Featured Listings</span>
             <h2 className="section-title">Premium Rentals</h2>
-            <p className="section-subtitle">Hand-picked homes containing modern amenities, verified details, and direct owner pricing.</p>
+            <p className="section-subtitle" style={{ textAlign: 'center', width: '100%' }}>Hand-picked homes containing modern amenities, verified details, and direct owner pricing.</p>
           </div>
           
           {loading ? (
@@ -355,7 +355,7 @@ const HomePage = () => {
           <div className="section-header">
             <span className="section-label">Why Choose Us</span>
             <h2 className="section-title">Rent Transparently</h2>
-            <p className="section-subtitle">A professional portal ensuring tenant and landlord trust at every transaction.</p>
+            <p className="section-subtitle" style={{ textAlign: 'center', width: '100%' }}>A professional portal ensuring tenant and landlord trust at every transaction.</p>
           </div>
           <div className="why-grid">
             {whyChooseUs.map((item, i) => (
