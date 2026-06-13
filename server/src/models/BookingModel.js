@@ -13,7 +13,14 @@ class BookingModel {
         property_id, guest_id, owner_id, check_in_date, check_out_date,
         monthly_rent, security_deposit, maintenance_fee, total_amount,
         guest_count, special_requests, status, payment_status
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+      ) 
+      SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
+      WHERE NOT EXISTS (
+        SELECT 1 FROM bookings 
+        WHERE property_id = $1 
+        AND status NOT IN ('cancelled')
+        AND check_in_date < $5 AND check_out_date > $4
+      )
       RETURNING *
     `;
 
@@ -26,6 +33,9 @@ class BookingModel {
     ];
 
     const result = await query(sql, values);
+    if (result.rows.length === 0) {
+      throw new Error('Property is no longer available for these dates');
+    }
     return result.rows[0];
   }
 
@@ -135,11 +145,7 @@ class BookingModel {
       SELECT COUNT(*) as count FROM bookings 
       WHERE property_id = $1 
       AND status NOT IN ('cancelled')
-      AND (
-        (check_in_date <= $2 AND check_out_date > $2)
-        OR (check_in_date < $3 AND check_out_date >= $3)
-        OR (check_in_date >= $2 AND check_out_date <= $3)
-      )
+      AND check_in_date < $3 AND check_out_date > $2
     `;
     const result = await query(sql, [propertyId, checkInDate, checkOutDate]);
     return parseInt(result.rows[0].count) === 0;

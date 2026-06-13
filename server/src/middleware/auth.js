@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const UserModel = require('../models/UserModel');
 const AppError = require('../utils/AppError');
 
 // Strict auth middleware - no fallback
@@ -24,20 +25,33 @@ const authMiddleware = async (req, res, next) => {
     }
 
     // Verify token using Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    const { data: { user: supabaseUser }, error } = await supabase.auth.getUser(token);
     
-    if (error || !user) {
+    if (error || !supabaseUser) {
       return res.status(401).json({
         success: false,
         message: 'Invalid or expired token.',
       });
     }
+
+    // Map Supabase user to Local Postgres integer ID
+    let localUser = await UserModel.findByEmail(supabaseUser.email);
+    if (!localUser) {
+      // Auto-create local profile if it doesn't exist
+      localUser = await UserModel.create({
+        name: supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.username || 'User',
+        email: supabaseUser.email,
+        password: 'supabase_managed', // password managed by Supabase
+        role: supabaseUser.user_metadata?.role || 'user',
+      });
+    }
     
     // Attach user to request
     req.user = {
-      id: user.id,
-      email: user.email,
-      role: user.user_metadata?.role || user.role || 'user',
+      id: localUser.id, // The local integer ID!
+      email: localUser.email,
+      role: localUser.role,
+      supabase_id: supabaseUser.id,
     };
 
     next();
@@ -54,13 +68,23 @@ const optionalAuthMiddleware = async (req, res, next) => {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
       
-      const { data: { user }, error } = await supabase.auth.getUser(token);
+      const { data: { user: supabaseUser }, error } = await supabase.auth.getUser(token);
       
-      if (!error && user) {
+      if (!error && supabaseUser) {
+        let localUser = await UserModel.findByEmail(supabaseUser.email);
+        if (!localUser) {
+          localUser = await UserModel.create({
+            name: supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.username || 'User',
+            email: supabaseUser.email,
+            password: 'supabase_managed',
+            role: supabaseUser.user_metadata?.role || 'user',
+          });
+        }
         req.user = {
-          id: user.id,
-          email: user.email,
-          role: user.user_metadata?.role || user.role || 'user',
+          id: localUser.id,
+          email: localUser.email,
+          role: localUser.role,
+          supabase_id: supabaseUser.id,
         };
       } else {
         req.user = null;
