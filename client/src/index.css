@@ -145,8 +145,12 @@ ul, ol {
 }
 
 .section-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
   margin-bottom: 48px;
+  width: 100%;
 }
 
 .section-label {
@@ -167,14 +171,18 @@ ul, ol {
   color: var(--dark);
   margin-bottom: 12px;
   line-height: 1.2;
+  text-align: center;
+  width: 100%;
 }
 
 .section-subtitle {
   font-size: 1.125rem;
   color: var(--gray-600);
-  max-width: 600px;
+  max-width: 700px;
   margin: 0 auto;
   text-align: center;
+  width: 100%;
+  padding: 0 16px;
 }
 
 /* Buttons */
