@@ -1,10 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+// Use placeholders if env vars are missing to prevent the entire React app from crashing on load
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase URL or Anon Key is missing. Check your .env file.');
+if (supabaseUrl === 'https://placeholder.supabase.co') {
+  console.error('CRITICAL: Supabase URL or Anon Key is missing from your .env file! Authentication will fail.');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
