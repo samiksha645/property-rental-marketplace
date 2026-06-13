@@ -233,7 +233,7 @@ const BookingForm = ({ property, onBookingSuccess, onBookingError }) => {
         <button 
           type="submit" 
           className="book-button"
-          disabled={loading || !availability?.available || !checkInDate || !checkOutDate}
+          disabled={loading}
         >
           {loading ? 'Processing...' : 'Request to Book'}
         </button>
