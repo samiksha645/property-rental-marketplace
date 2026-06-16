@@ -4,7 +4,7 @@
    ============================================= */
 
 /* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@500;600;700&display=swap');
 
 /* CSS Variables */
 :root {
@@ -87,6 +87,7 @@ body {
   background: #ffffff;
   line-height: 1.6;
   overflow-x: hidden;
+  min-height: 100vh;
 }
 
 img {
@@ -198,6 +199,9 @@ ul, ol {
   transition: all 0.3s ease;
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
+  border: none;
+  line-height: 1.4;
 }
 
 .btn-primary {
@@ -215,12 +219,13 @@ ul, ol {
 .btn-secondary {
   background: white;
   color: var(--gray-900);
-  border: 1px solid var(--gray-200);
+  border: 1.5px solid var(--gray-200);
 }
 
 .btn-secondary:hover {
   background: var(--gray-50);
   border-color: var(--gray-300);
+  transform: translateY(-1px);
 }
 
 .btn-danger {
@@ -230,6 +235,7 @@ ul, ol {
 
 .btn-danger:hover {
   background: #dc2626;
+  transform: translateY(-1px);
 }
 
 .btn-sm {
@@ -437,4 +443,16 @@ ul, ol {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--gray-500);
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Selection styling */
+::selection {
+  background: var(--primary-200);
+  color: var(--dark);
 }

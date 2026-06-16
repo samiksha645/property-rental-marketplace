@@ -149,23 +149,13 @@ const HomePage = () => {
           </div>
 
           {/* Search Engine Panel */}
-          <div className="search-panel-container" style={{ maxWidth: '850px', margin: '0 auto 40px', background: 'rgba(255, 255, 255, 0.1)', padding: '16px', borderRadius: '24px', backdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
-            <div className="rent-buy-toggle" style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <div className="search-panel-container">
+            <div className="rent-buy-toggle">
               <button 
                 onClick={() => setSearchMode('rent')} 
-                style={{ 
-                  padding: '8px 20px', 
-                  borderRadius: '100px', 
-                  border: 'none', 
-                  fontWeight: '600', 
-                  fontSize: '0.875rem', 
-                  cursor: 'pointer',
-                  background: searchMode === 'rent' ? 'var(--primary)' : 'rgba(255, 255, 255, 0.1)', 
-                  color: 'white',
-                  transition: 'all 0.2s' 
-                }}
+                className={searchMode === 'rent' ? 'active-btn' : 'inactive-btn'}
               >
-                Rent (Verified)
+                📋 Rent (Verified)
               </button>
               <button 
                 onClick={() => {
@@ -173,64 +163,51 @@ const HomePage = () => {
                   alert('Commercial property buying section coming soon! Browsing verified rentals is currently active.');
                   setSearchMode('rent');
                 }} 
-                style={{ 
-                  padding: '8px 20px', 
-                  borderRadius: '100px', 
-                  border: 'none', 
-                  fontWeight: '600', 
-                  fontSize: '0.875rem', 
-                  cursor: 'pointer',
-                  background: 'rgba(255, 255, 255, 0.1)', 
-                  color: 'rgba(255, 255, 255, 0.6)' 
-                }}
+                className="inactive-btn"
               >
-                Buy / Invest
+                💰 Buy / Invest
               </button>
             </div>
             
             <form onSubmit={handleSearch}>
-              <div className="search-input-group" style={{ background: 'white', borderRadius: '16px', padding: '8px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                <div className="search-field" style={{ flex: '2 1 200px', borderRight: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', padding: '8px 12px' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Search Locality</label>
+              <div className="search-input-group">
+                <div className="search-field">
+                  <label>Search Locality</label>
                   <input 
                     type="text" 
                     placeholder="Enter area, locality or landmark..." 
                     value={searchFilters.search}
                     onChange={(e) => setSearchFilters({ ...searchFilters, search: e.target.value })}
-                    style={{ border: 'none', outline: 'none', fontSize: '0.938rem', marginTop: '4px', color: '#0f172a' }}
                   />
                 </div>
                 
-                <div className="search-field" style={{ flex: '1 1 120px', borderRight: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', padding: '8px 12px' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>City</label>
+                <div className="search-field">
+                  <label>City</label>
                   <select 
                     value={searchFilters.city} 
                     onChange={(e) => setSearchFilters({ ...searchFilters, city: e.target.value })}
-                    style={{ border: 'none', outline: 'none', fontSize: '0.938rem', marginTop: '4px', background: 'transparent', cursor: 'pointer', color: '#0f172a' }}
                   >
                     <option value="">All Cities</option>
                     {popularCities.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
                   </select>
                 </div>
 
-                <div className="search-field" style={{ flex: '1 1 120px', borderRight: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', padding: '8px 12px' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Type</label>
+                <div className="search-field">
+                  <label>Type</label>
                   <select 
                     value={searchFilters.type} 
                     onChange={(e) => setSearchFilters({ ...searchFilters, type: e.target.value })}
-                    style={{ border: 'none', outline: 'none', fontSize: '0.938rem', marginTop: '4px', background: 'transparent', cursor: 'pointer', color: '#0f172a' }}
                   >
                     <option value="">All Types</option>
                     {categories.map(c => <option key={c.slug} value={c.slug}>{c.name}</option>)}
                   </select>
                 </div>
 
-                <div className="search-field" style={{ flex: '1 1 120px', display: 'flex', flexDirection: 'column', padding: '8px 12px' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Budget</label>
+                <div className="search-field">
+                  <label>Budget</label>
                   <select 
                     value={searchFilters.budget} 
                     onChange={(e) => setSearchFilters({ ...searchFilters, budget: e.target.value })}
-                    style={{ border: 'none', outline: 'none', fontSize: '0.938rem', marginTop: '4px', background: 'transparent', cursor: 'pointer', color: '#0f172a' }}
                   >
                     <option value="">Any Budget</option>
                     <option value="0-10000">Under ₹10k</option>
@@ -241,24 +218,7 @@ const HomePage = () => {
                   </select>
                 </div>
 
-                <button 
-                  type="submit" 
-                  style={{ 
-                    background: 'var(--primary)', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '12px', 
-                    padding: '12px 24px', 
-                    fontWeight: '700', 
-                    cursor: 'pointer', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px',
-                    transition: 'opacity 0.2s'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
-                  onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
-                >
+                <button type="submit" className="search-submit-btn">
                   🔍 Search
                 </button>
               </div>

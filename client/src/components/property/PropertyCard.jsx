@@ -121,26 +121,6 @@ const PropertyCard = ({ property, onPropertyClick }) => {
             className={`property-card-fav-btn ${isFav ? 'active' : ''}`} 
             onClick={handleFavoriteClick}
             aria-label="Add to favorites"
-            style={{
-              position: 'absolute',
-              top: '12px',
-              right: '12px',
-              background: 'white',
-              border: 'none',
-              borderRadius: '50%',
-              width: '36px',
-              height: '36px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              zIndex: 5,
-              fontSize: '18px',
-              transition: 'transform 0.2s',
-            }}
-            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
           >
             {isFav ? '❤️' : '🤍'}
           </button>
@@ -177,19 +157,6 @@ const PropertyCard = ({ property, onPropertyClick }) => {
               <button 
                 className="quick-view-btn" 
                 onClick={handleQuickViewClick}
-                style={{
-                  padding: '8px 12px',
-                  background: '#f1f5f9',
-                  border: 'none',
-                  color: '#475569',
-                  borderRadius: '8px',
-                  fontSize: '0.75rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'background 0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.background = '#e2e8f0'}
-                onMouseOut={(e) => e.currentTarget.style.background = '#f1f5f9'}
               >
                 👁️ Quick View
               </button>
