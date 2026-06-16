@@ -8,7 +8,6 @@ const AdminLayout = ({ children }) => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Redirect non-admin users
   if (!isAdmin()) {
     return <Navigate to="/" replace />;
   }
@@ -35,8 +34,8 @@ const AdminLayout = ({ children }) => {
       <aside className="admin-sidebar">
         <div className="sidebar-header">
           <div className="logo-section">
-            <span className="logo-icon">🏢</span>
-            <h2>HomelyAdmin</h2>
+            <span className="logo-icon">🏡</span>
+            <h2>Rental<span>Admin</span></h2>
           </div>
           <button className="mobile-close-btn" onClick={() => setMobileOpen(false)}>✕</button>
         </div>

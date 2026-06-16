@@ -77,7 +77,7 @@ const HomePage = () => {
   const [featuredProperties, setFeaturedProperties] = useState([]);
   const [latestProperties, setLatestProperties] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchMode, setSearchMode] = useState('rent'); // 'rent' or 'buy'
+  const [searchMode, setSearchMode] = useState('rent');
   const [searchFilters, setSearchFilters] = useState({ city: '', type: '', budget: '', search: '' });
   const [citiesList, setCitiesList] = useState(popularCities);
 
@@ -96,7 +96,6 @@ const HomePage = () => {
       if (featuredRes.success) setFeaturedProperties(featuredRes.properties);
       if (latestRes.success) setLatestProperties(latestRes.properties);
 
-      // Fetch city counts from database and merge
       try {
         const citiesResponse = await fetch(`${API_BASE_URL.replace('/api/v1', '')}/api/v1/cities`);
         const citiesData = await citiesResponse.json();
@@ -137,18 +136,56 @@ const HomePage = () => {
 
   return (
     <div className="homepage">
-      {/* Hero Section */}
+      {/* Hero Section - Premium */}
       <section className="hero-section">
-        <div className="hero-overlay"></div>
-        <div className="hero-bg-pattern"></div>
-        <div className="hero-content container">
+        <div className="hero-image-wrapper">
+          <img 
+            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80"
+            alt="Luxury property"
+            className="hero-bg-image"
+          />
+        </div>
+        <div className="hero-orb hero-orb-1"></div>
+        <div className="hero-orb hero-orb-2"></div>
+        
+        <div className="hero-content container-wide">
           <div className="hero-text">
-            <span className="hero-badge">🇮🇳 India's Most Trusted Property Marketplace</span>
-            <h1 className="hero-title">Redefining Rental Living</h1>
-            <p className="hero-subtitle">Discover premium verified properties across India's top tech hubs. No brokerages, zero hassles.</p>
+            <span className="hero-badge">✦ India's Most Trusted Property Marketplace</span>
+            <h1 className="hero-title">
+              Find Your Perfect<br />
+              <span className="highlight">Rental Home</span>
+            </h1>
+            <p className="hero-subtitle">
+              Discover premium verified properties across India's top cities. 
+              No brokerages, zero hassles, complete transparency.
+            </p>
+            <div className="hero-buttons">
+              <button className="btn btn-primary" onClick={() => navigate('/properties')}>
+                Explore Properties
+              </button>
+              <button className="btn btn-outline" onClick={() => navigate('/#explore')}>
+                View Locations
+              </button>
+            </div>
+
+            {/* Statistics */}
+            <div className="hero-stats">
+              <div className="hero-stat">
+                <span className="hero-stat-value">1,500+</span>
+                <span className="hero-stat-label">Verified Listings</span>
+              </div>
+              <div className="hero-stat">
+                <span className="hero-stat-value">14+</span>
+                <span className="hero-stat-label">Indian Cities</span>
+              </div>
+              <div className="hero-stat">
+                <span className="hero-stat-value">25,000+</span>
+                <span className="hero-stat-label">Happy Families</span>
+              </div>
+            </div>
           </div>
 
-          {/* Search Engine Panel */}
+          {/* Search Panel */}
           <div className="search-panel-container">
             <div className="rent-buy-toggle">
               <button 
@@ -224,35 +261,19 @@ const HomePage = () => {
               </div>
             </form>
           </div>
-
-          {/* Statistics Grid */}
-          <div className="hero-stats" style={{ marginTop: '20px' }}>
-            <div className="hero-stat">
-              <span className="hero-stat-value">1,500+</span>
-              <span className="hero-stat-label">Verified Listings</span>
-            </div>
-            <div className="hero-stat">
-              <span className="hero-stat-value">14+</span>
-              <span className="hero-stat-label">Indian Cities</span>
-            </div>
-            <div className="hero-stat">
-              <span className="hero-stat-value">25,000+</span>
-              <span className="hero-stat-label">Happy Families</span>
-            </div>
-          </div>
         </div>
       </section>
 
       {/* Popular Locations */}
-      <section id="explore" className="section cities-section" style={{ background: '#f8fafc' }}>
+      <section id="explore" className="section cities-section">
         <div className="container">
           <div className="section-header">
             <span className="section-label">Popular Locations</span>
-            <h2 className="section-title">Explore Tech Hubs</h2>
-            <p className="section-subtitle" style={{ textAlign: 'center', width: '100%' }}>Find premium rental options near IT Parks, business complexes, and top colleges.</p>
+            <h2 className="section-title">Explore Premium Destinations</h2>
+            <p className="section-subtitle">Find premium rental options near IT Parks, business complexes, and top colleges across India.</p>
           </div>
           <div className="cities-grid">
-            {citiesList.map((city, i) => (
+            {citiesList.slice(0, 6).map((city, i) => (
               <div key={i} className="city-card" onClick={() => navigate(`/properties?city=${city.name}`)}>
                 <div className="city-image-wrapper">
                   <img 
@@ -278,19 +299,41 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Property Categories */}
+      <section className="section categories-section">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-label">Categories</span>
+            <h2 className="section-title">Browse by Property Type</h2>
+            <p className="section-subtitle">Find exactly what you're looking for from our curated categories.</p>
+          </div>
+          <div className="categories-grid">
+            {categories.map((cat, i) => (
+              <div key={i} className="category-card" onClick={() => navigate(`/properties?type=${cat.slug}`)}>
+                <div className="category-icon-wrapper">
+                  <span>{cat.icon}</span>
+                </div>
+                <span className="category-name">{cat.name}</span>
+                <span className="category-count">Browse →</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Featured Properties */}
       <section className="section featured-section">
         <div className="container">
           <div className="section-header">
             <span className="section-label">Featured Listings</span>
             <h2 className="section-title">Premium Rentals</h2>
-            <p className="section-subtitle" style={{ textAlign: 'center', width: '100%' }}>Hand-picked homes containing modern amenities, verified details, and direct owner pricing.</p>
+            <p className="section-subtitle">Hand-picked homes containing modern amenities, verified details, and direct owner pricing.</p>
           </div>
           
           {loading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
+            <div className="grid-auto">
               {[1, 2, 3].map(n => (
-                <div key={n} style={{ height: '350px', background: '#e2e8f0', borderRadius: '16px', animation: 'pulse 1.5s infinite' }} />
+                <div key={n} className="skeleton-card" />
               ))}
             </div>
           ) : (
@@ -301,8 +344,8 @@ const HomePage = () => {
             </div>
           )}
 
-          <div style={{ textAlign: 'center', marginTop: '48px' }}>
-            <button className="btn btn-primary btn-lg" onClick={() => navigate('/properties')} style={{ padding: '14px 32px', borderRadius: '12px' }}>
+          <div style={{ textAlign: 'center', marginTop: '52px' }}>
+            <button className="btn btn-primary btn-lg" onClick={() => navigate('/properties')}>
               View All Properties →
             </button>
           </div>
@@ -310,21 +353,21 @@ const HomePage = () => {
       </section>
 
       {/* Why Choose Us */}
-      <section id="services" className="section why-section" style={{ background: '#f8fafc' }}>
+      <section id="services" className="section why-section">
         <div className="container">
           <div className="section-header">
             <span className="section-label">Why Choose Us</span>
             <h2 className="section-title">Rent Transparently</h2>
-            <p className="section-subtitle" style={{ textAlign: 'center', width: '100%' }}>A professional portal ensuring tenant and landlord trust at every transaction.</p>
+            <p className="section-subtitle">A professional portal ensuring tenant and landlord trust at every transaction.</p>
           </div>
           <div className="why-grid">
             {whyChooseUs.map((item, i) => (
               <div key={i} className="why-card">
-                <div className="why-icon-wrapper" style={{ display: 'inline-flex', padding: '12px', background: 'var(--primary-50)', borderRadius: '12px', marginBottom: '16px' }}>
-                  <span className="why-icon" style={{ fontSize: '24px' }}>{item.icon}</span>
+                <div className="why-icon-wrapper">
+                  <span className="why-icon">{item.icon}</span>
                 </div>
-                <h3 className="why-title" style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '8px' }}>{item.title}</h3>
-                <p className="why-desc" style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.6' }}>{item.desc}</p>
+                <h3 className="why-title">{item.title}</h3>
+                <p className="why-desc">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -332,29 +375,29 @@ const HomePage = () => {
       </section>
 
       {/* Customer Testimonials */}
-      <section id="about" className="section testimonials-section" style={{ background: '#0f172a' }}>
+      <section id="about" className="section testimonials-section">
         <div className="container">
           <div className="section-header">
-            <span className="section-label" style={{ background: 'rgba(37,99,235,0.2)', color: '#60a5fa' }}>Client Reviews</span>
+            <span className="section-label" style={{ background: 'rgba(201,168,76,0.1)', color: '#d4b96a', border: '1px solid rgba(201,168,76,0.15)' }}>Client Reviews</span>
             <h2 className="section-title" style={{ color: 'white' }}>Success Stories</h2>
-            <p className="section-subtitle" style={{ color: '#94a3b8' }}>Real reviews from tenants who found their perfect spaces with us.</p>
+            <p className="section-subtitle" style={{ color: 'rgba(255,255,255,0.5)' }}>Real reviews from tenants who found their perfect spaces with us.</p>
           </div>
           <div className="testimonials-grid">
             {testimonials.map((t, i) => (
               <div key={i} className="testimonial-card">
-                <div className="testimonial-stars" style={{ color: '#f59e0b', fontSize: '18px', marginBottom: '12px' }}>
+                <div className="testimonial-stars">
                   ★ ★ ★ ★ ★
                 </div>
-                <p className="testimonial-text" style={{ color: '#cbd5e1', fontStyle: 'italic', marginBottom: '24px', lineHeight: '1.6' }}>
+                <p className="testimonial-text">
                   "{t.text}"
                 </p>
                 <div className="testimonial-author">
-                  <div className="testimonial-avatar" style={{ width: '40px', height: '40px', background: 'var(--primary)', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                  <div className="testimonial-avatar">
                     {t.avatar}
                   </div>
                   <div>
-                    <h4 style={{ color: 'white', fontWeight: '600' }}>{t.name}</h4>
-                    <span style={{ color: '#64748b', fontSize: '0.8rem' }}>📍 {t.location}</span>
+                    <h4 className="testimonial-name">{t.name}</h4>
+                    <span className="testimonial-location">📍 {t.location}</span>
                   </div>
                 </div>
               </div>
@@ -364,20 +407,21 @@ const HomePage = () => {
       </section>
 
       {/* Call To Action */}
-      <section className="section newsletter-section" style={{ padding: '80px 0' }}>
+      <section className="section newsletter-section">
         <div className="container">
-          <div className="newsletter-card" style={{ background: 'linear-gradient(135deg, var(--primary) 0%, #1e1b4b 100%)', borderRadius: '24px', padding: '64px', color: 'white', textAlign: 'center' }}>
-            <h2 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '12px' }}>List Your Property Today</h2>
-            <p style={{ color: 'rgba(255, 255, 255, 0.8)', maxWidth: '600px', margin: '0 auto 32px' }}>
-              Are you an owner looking to list flat, apartment, villa or PG? Get verified leads, direct communication, and robust verification.
-            </p>
-            <button 
-              className="btn btn-secondary btn-lg" 
-              onClick={() => navigate('/dashboard')}
-              style={{ background: 'white', color: 'var(--primary)', border: 'none', fontWeight: '700', padding: '16px 40px', borderRadius: '12px', cursor: 'pointer' }}
-            >
-              Get Started as Owner
-            </button>
+          <div className="newsletter-card">
+            <div className="newsletter-content">
+              <h2 className="newsletter-title">List Your Property Today</h2>
+              <p className="newsletter-subtitle">
+                Are you an owner looking to list flat, apartment, villa or PG? Get verified leads, direct communication, and robust verification.
+              </p>
+              <button 
+                className="cta-btn" 
+                onClick={() => navigate('/dashboard')}
+              >
+                Get Started as Owner →
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -387,7 +431,7 @@ const HomePage = () => {
         <div className="container">
           <div className="footer-grid">
             <div className="footer-col footer-brand">
-              <h3 className="footer-logo">🏡 Rental<span>Marketplace</span></h3>
+              <h3 className="footer-logo">✦ Rental<span>Marketplace</span></h3>
               <p>India's most trusted rental property marketplace. Find verified rental homes, apartments, and PG accommodations across all major Indian cities.</p>
             </div>
             <div className="footer-col">

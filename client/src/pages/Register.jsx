@@ -29,7 +29,6 @@ const Register = () => {
     e.preventDefault();
     setError('');
 
-    // Validation
     if (!name || !email || !password || !confirmPassword) {
       setError('Please fill in all required fields');
       return;
@@ -66,29 +65,45 @@ const Register = () => {
     <div className="register-page">
       <div className="register-container">
         <div className="register-header">
+          <div className="register-header-logo">🏡</div>
           <h1>Create Account</h1>
           <p>Join our rental marketplace</p>
         </div>
 
         {error && (
           <div className="error-message">
-            {error}
+            ⚠️ {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="register-form">
-          <div className="form-group">
-            <label htmlFor="name">Full Name *</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={name}
-              onChange={handleChange}
-              placeholder="Enter your full name"
-              required
-              disabled={loading}
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="name">Full Name *</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={name}
+                onChange={handleChange}
+                placeholder="Enter your full name"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="phone">Phone Number</label>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                value={phone}
+                onChange={handleChange}
+                placeholder="Enter your phone"
+                disabled={loading}
+              />
+            </div>
           </div>
 
           <div className="form-group">
@@ -105,45 +120,34 @@ const Register = () => {
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="phone">Phone Number</label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={phone}
-              onChange={handleChange}
-              placeholder="Enter your phone number"
-              disabled={loading}
-            />
-          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="password">Password *</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={password}
+                onChange={handleChange}
+                placeholder="Create a password (min 6 chars)"
+                required
+                disabled={loading}
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password *</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={password}
-              onChange={handleChange}
-              placeholder="Create a password (min 6 characters)"
-              required
-              disabled={loading}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password *</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-              required
-              disabled={loading}
-            />
+            <div className="form-group">
+              <label htmlFor="confirmPassword">Confirm Password *</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm your password"
+                required
+                disabled={loading}
+              />
+            </div>
           </div>
 
           <button 

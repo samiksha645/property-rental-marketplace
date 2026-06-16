@@ -20,7 +20,6 @@ const Login = () => {
       const result = await login(email, password);
       
       if (result.success) {
-        // Get user role from result directly (not from state because state hasn't updated yet)
         const userRole = result.user?.role;
         if (userRole === 'admin') {
           navigate('/admin');
@@ -41,13 +40,14 @@ const Login = () => {
     <div className="login-page">
       <div className="login-container">
         <div className="login-header">
+          <div className="login-header-logo">🏡</div>
           <h1>Welcome Back</h1>
           <p>Sign in to your account</p>
         </div>
 
         {error && (
           <div className="error-message">
-            {error}
+            ⚠️ {error}
           </div>
         )}
 
@@ -97,7 +97,7 @@ const Login = () => {
         </div>
 
         <div className="demo-credentials">
-          <p>Demo Admin Credentials:</p>
+          <p>🔐 Demo Admin Credentials</p>
           <p>Email: admin@rentalmarketplace.com</p>
           <p>Password: admin123</p>
         </div>
