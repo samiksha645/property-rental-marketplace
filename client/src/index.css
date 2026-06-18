@@ -1,7 +1,6 @@
 /* ===================================================
-   RENTAL MARKETPLACE - LUXURY DESIGN SYSTEM v3.0
-   Inspired by: Dribbble references, luxury real estate
-   Premium, modern, investor-ready aesthetic
+   RENTAL MARKETPLACE - LUXURY DESIGN SYSTEM v4.0
+   Premium, modern, production-ready aesthetic
    =================================================== */
 
 /* Google Fonts - Premium Typography */
@@ -63,7 +62,18 @@
   --font-display: 'Space Grotesk', -apple-system, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* Spacing */
+  /* Spacing - 8px scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
   --section-padding: 120px;
   --section-padding-mobile: 60px;
 
@@ -77,7 +87,7 @@
   --radius-3xl: 32px;
   --radius-full: 9999px;
 
-  /* Shadows - Premium */
+  /* Shadows - Premium System */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
@@ -85,7 +95,7 @@
   --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.04);
   --shadow-2xl: 0 24px 64px rgba(0, 0, 0, 0.12);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
-  --shadow-card-hover: 0 20px 60px rgba(0, 0, 0, 0.12);
+  --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.04);
   --shadow-glow: 0 0 24px rgba(201, 168, 76, 0.2);
   --shadow-glow-blue: 0 0 24px rgba(59, 130, 246, 0.15);
 
@@ -408,14 +418,6 @@ ul, ol {
 @keyframes skeleton-loading {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
-}
-
-.skeleton-card {
-  height: 380px;
-  background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-50) 50%, var(--gray-100) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s ease-in-out infinite;
-  border-radius: var(--radius-lg);
 }
 
 /* Skeleton text lines */
@@ -749,12 +751,12 @@ ul, ol {
 
 /* ===== PAGE CONTENT WRAPPER ===== */
 .page-content {
-  padding-top: 80px;
+  padding-top: 72px;
 }
 
 @media (max-width: 480px) {
   .page-content {
-    padding-top: 64px;
+    padding-top: 60px;
   }
 }
 

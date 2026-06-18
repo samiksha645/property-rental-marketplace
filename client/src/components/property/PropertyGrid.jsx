@@ -1,27 +1,32 @@
 import React from 'react';
 import PropertyCard from './PropertyCard.jsx';
 
+const SkeletonCard = () => (
+  <div className="skeleton-card">
+    <div className="skeleton-image"></div>
+    <div className="skeleton-content">
+      <div className="skeleton-line skeleton-line-sm"></div>
+      <div className="skeleton-line skeleton-line-lg"></div>
+      <div className="skeleton-line skeleton-line-full"></div>
+      <div className="skeleton-footer">
+        <div className="skeleton-price"></div>
+        <div className="skeleton-buttons">
+          <div className="skeleton-btn"></div>
+          <div className="skeleton-btn"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const PropertyGrid = ({ properties, onPropertyClick, onBook, loading, error }) => {
   // 1. Handle Loading State
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '80px 20px', fontSize: '18px', color: '#4b5563', fontWeight: '500' }}>
-        <div className="loading-spinner" style={{
-          width: '40px',
-          height: '40px',
-          border: '4px solid #f3f4f6',
-          borderTop: '4px solid #6366f1',
-          borderRadius: '50%',
-          margin: '0 auto 16px auto',
-          animation: 'spin 1s linear infinite'
-        }}></div>
-        Loading amazing properties...
-        <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
+      <div className="properties-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px', padding: '20px 0' }}>
+        {[1, 2, 3, 4, 5, 6].map(n => (
+          <SkeletonCard key={n} />
+        ))}
       </div>
     );
   }
@@ -35,7 +40,7 @@ const PropertyGrid = ({ properties, onPropertyClick, onBook, loading, error }) =
         color: '#ef4444',
         fontSize: '16px',
         background: '#fef2f2',
-        borderRadius: '12px',
+        borderRadius: '16px',
         border: '1px solid #fee2e2',
         margin: '20px 0'
       }}>
@@ -52,11 +57,13 @@ const PropertyGrid = ({ properties, onPropertyClick, onBook, loading, error }) =
         padding: '60px 20px',
         color: '#6b7280',
         fontSize: '16px',
-        background: '#f9fafb',
-        borderRadius: '12px',
-        border: '1px dashed #e5e7eb'
+        background: '#ffffff',
+        borderRadius: '20px',
+        border: '1px solid #f0f0f8'
       }}>
-        🏠 No properties match your criteria. Try resetting filters!
+        <span style={{ fontSize: '3rem', display: 'block', marginBottom: '16px' }}>🏘️</span>
+        <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.25rem', fontWeight: 700, color: '#111118', marginBottom: '8px' }}>No properties match your criteria</h3>
+        <p style={{ color: '#8a8a9e', marginBottom: '24px' }}>Try resetting filters or searching for a different keyword</p>
       </div>
     );
   }
@@ -66,7 +73,7 @@ const PropertyGrid = ({ properties, onPropertyClick, onBook, loading, error }) =
     <div style={{
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-      gap: '30px',
+      gap: '24px',
       padding: '20px 0'
     }}>
       {properties.map((property) => (

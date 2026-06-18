@@ -13,6 +13,53 @@ const formatPrice = (price) => {
   return `₹${price}`;
 };
 
+// SVG Icons
+const HeartIcon = ({ filled }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill={filled ? '#ef4444' : 'none'} stroke={filled ? '#ef4444' : '#666'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+  </svg>
+);
+
+const LocationIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8a8a9e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+    <circle cx="12" cy="10" r="3" />
+  </svg>
+);
+
+const VerifiedIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+    <polyline points="22 4 12 14.01 9 11.01" />
+  </svg>
+);
+
+const BedIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5a5a6e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 4v16" />
+    <path d="M2 8h18a2 2 0 0 1 2 2v10" />
+    <path d="M2 17h20" />
+    <path d="M6 8v9" />
+  </svg>
+);
+
+const BathIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5a5a6e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 12h16a1 1 0 0 1 1 1v3a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4v-3a1 1 0 0 1 1-1z" />
+    <path d="M6 12V5a2 2 0 0 1 2-2h3v2.25" />
+    <path d="M4 21l1-1.5" />
+    <path d="M20 21l-1-1.5" />
+  </svg>
+);
+
+const AreaIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5a5a6e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+    <line x1="3" y1="9" x2="21" y2="9" />
+    <line x1="9" y1="21" x2="9" y2="9" />
+  </svg>
+);
+
 const PropertyCard = ({ property, onPropertyClick }) => {
   const navigate = useNavigate();
   const { isAuthenticated, token } = useAuth();
@@ -47,9 +94,13 @@ const PropertyCard = ({ property, onPropertyClick }) => {
   useEffect(() => {
     const checkStatus = async () => {
       if (isAuthenticated && token && id) {
-        const res = await wishlistService.isWishlisted(token, id);
-        if (res.success) {
-          setIsFav(res.is_wishlisted);
+        try {
+          const res = await wishlistService.isWishlisted(token, id);
+          if (res.success) {
+            setIsFav(res.is_wishlisted);
+          }
+        } catch (err) {
+          // silently fail
         }
       }
     };
@@ -87,9 +138,17 @@ const PropertyCard = ({ property, onPropertyClick }) => {
     return type.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
+  const handleCardClick = () => {
+    if (onPropertyClick) {
+      onPropertyClick(id);
+    } else {
+      navigate(`/property/${id}`);
+    }
+  };
+
   return (
     <>
-      <div className="property-card" onClick={() => onPropertyClick ? onPropertyClick(id) : navigate(`/property/${id}`)}>
+      <div className="property-card" onClick={handleCardClick}>
         <div className="property-card-image-container">
           {displayImage && !imgError ? (
             <img 
@@ -111,57 +170,71 @@ const PropertyCard = ({ property, onPropertyClick }) => {
             </div>
           )}
           
-          <div className="property-card-badges">
-            {is_featured && <span className="badge badge-featured">⭐ Featured</span>}
-            {is_verified && <span className="badge badge-verified">✓ Verified</span>}
-            {pet_friendly && <span className="badge badge-primary">🐾 Pet Friendly</span>}
-          </div>
+          {/* Featured Badge */}
+          {is_featured && !is_verified && (
+            <span className="property-card-featured">⭐ Featured</span>
+          )}
+          
+          {/* Verified Badge */}
+          {is_verified && (
+            <span className="property-card-verified-badge">
+              <VerifiedIcon /> Verified
+            </span>
+          )}
 
+          {/* Favorite Button */}
           <button 
             className={`property-card-fav-btn ${isFav ? 'active' : ''}`} 
             onClick={handleFavoriteClick}
-            aria-label="Add to favorites"
+            aria-label={isFav ? 'Remove from favorites' : 'Add to favorites'}
           >
-            {isFav ? '❤️' : '🤍'}
+            <HeartIcon filled={isFav} />
           </button>
 
-          <div className="property-card-type">{formatPropertyType(property_type)}</div>
+          {/* Property Type Badge */}
+          <span className="property-card-type">{formatPropertyType(property_type)}</span>
         </div>
 
         <div className="property-card-content">
           <div className="property-card-location">
-            📍 {city}{locality ? `, ${locality}` : ''}
+            <LocationIcon />
+            {city}{locality ? `, ${locality}` : ''}
           </div>
           
           <h3 className="property-card-title">{title}</h3>
           
           <div className="property-card-specs">
-            <span className="spec" title="Bedrooms">🛏️ {bedrooms} BHK</span>
-            <span className="spec" title="Bathrooms">🚿 {bathrooms} Bath</span>
-            {area_sqft && <span className="spec" title="Area">📐 {area_sqft} sqft</span>}
-            <span className="spec" title="Furnishing">
-              {furnishing === 'fully-furnished' ? '🪑 Fully' : furnishing === 'semi-furnished' ? '🪑 Semi' : '📦 Unfurnished'}
+            <span className="spec" title="Bedrooms">
+              <span className="spec-icon"><BedIcon /></span> {bedrooms} BHK
             </span>
+            <span className="spec" title="Bathrooms">
+              <span className="spec-icon"><BathIcon /></span> {bathrooms} Bath
+            </span>
+            {area_sqft && (
+              <span className="spec" title="Area">
+                <span className="spec-icon"><AreaIcon /></span> {area_sqft} sqft
+              </span>
+            )}
           </div>
 
           <div className="property-card-divider"></div>
 
           <div className="property-card-footer">
             <div className="property-card-pricing">
-              <span className="price-rent">{formatPrice(monthly_rent)}/mo</span>
+              <span className="price-rent">{formatPrice(monthly_rent)}<span>/mo</span></span>
               {security_deposit > 0 && (
                 <span className="price-deposit">₹{Number(security_deposit).toLocaleString()} deposit</span>
               )}
             </div>
-            <div className="property-card-actions" style={{ display: 'flex', gap: '8px' }}>
+            <div className="property-card-actions">
               <button 
                 className="quick-view-btn" 
                 onClick={handleQuickViewClick}
               >
-                👁️ Quick View
+                Quick View
               </button>
               <button className="view-details-btn">
-                Details →
+                Details
               </button>
             </div>
           </div>
@@ -173,146 +246,95 @@ const PropertyCard = ({ property, onPropertyClick }) => {
         <div 
           className="quickview-overlay" 
           onClick={() => setIsQuickViewOpen(false)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(15, 23, 42, 0.65)',
-            backdropFilter: 'blur(4px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '20px'
-          }}
         >
           <div 
             className="quickview-modal" 
             onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              maxWidth: '800px',
-              width: '100%',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              position: 'relative',
-              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
-              display: 'flex',
-              flexDirection: 'column'
-            }}
           >
             <button 
               className="quickview-close-btn" 
               onClick={() => setIsQuickViewOpen(false)}
-              style={{
-                position: 'absolute',
-                top: '16px',
-                right: '16px',
-                background: 'white',
-                border: 'none',
-                borderRadius: '50%',
-                width: '32px',
-                height: '32px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                zIndex: 10,
-                fontSize: '16px',
-                fontWeight: 'bold'
-              }}
+              aria-label="Close quick view"
             >
               ✕
             </button>
             
-            <div 
-              className="quickview-content"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                gap: '0'
-              }}
-            >
-              <div className="quickview-image-side" style={{ height: '350px', background: '#f1f5f9' }}>
+            <div className="quickview-content">
+              <div className="quickview-image-side">
                 <img 
                   src={displayImage || FALLBACK_IMAGE} 
                   alt={title} 
                   className="quickview-image" 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
-              <div className="quickview-details-side" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="quickview-details-side">
                 <div>
-                  <span 
-                    className="quickview-type-badge"
-                    style={{
-                      background: 'var(--primary-50)',
-                      color: 'var(--primary)',
-                      padding: '4px 10px',
-                      borderRadius: '6px',
-                      fontSize: '0.75rem',
-                      fontWeight: '600',
-                      textTransform: 'uppercase'
-                    }}
-                  >
+                  <span className="quickview-type-badge">
                     {formatPropertyType(property_type)}
                   </span>
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginTop: '8px', color: '#0f172a' }}>{title}</h2>
-                  <p style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '4px' }}>📍 {locality ? `${locality}, ` : ''}{city}, {state}</p>
+                  <h2 className="quickview-title">{title}</h2>
+                  <p className="quickview-location">
+                    <LocationIcon /> {locality ? `${locality}, ` : ''}{city}, {state}
+                  </p>
                 </div>
                 
-                <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '10px' }}>
-                  <span style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)' }}>{formatPrice(monthly_rent)}</span>
-                  <span style={{ color: '#64748b', fontSize: '0.875rem' }}> / month</span>
-                  {maintenance > 0 && <span style={{ color: '#475569', fontSize: '0.813rem', marginLeft: '12px' }}>+ ₹{maintenance} Maintenance</span>}
+                <div className="quickview-price-box">
+                  <span className="price">{formatPrice(monthly_rent)}</span>
+                  <span className="price-sub"> / month</span>
+                  {maintenance > 0 && <span className="price-sub" style={{ marginLeft: '10px' }}>+ ₹{maintenance} Maintenance</span>}
                 </div>
 
-                <div 
-                  className="quickview-specs"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, 1fr)',
-                    gap: '12px',
-                    fontSize: '0.875rem',
-                    color: '#475569'
-                  }}
-                >
-                  <div><strong>Beds:</strong> {bedrooms} BHK</div>
-                  <div><strong>Baths:</strong> {bathrooms}</div>
-                  <div><strong>Super Area:</strong> {area_sqft || '—'} sqft</div>
-                  <div><strong>Furnishing:</strong> {furnishing?.replace('-', ' ')}</div>
-                  <div><strong>Parking:</strong> {parking?.replace('-', ' ')}</div>
+                <div className="quickview-specs">
+                  <div className="quickview-spec-item">
+                    <span className="quickview-spec-icon"><BedIcon /></span>
+                    <span><strong>Beds:</strong> {bedrooms} BHK</span>
+                  </div>
+                  <div className="quickview-spec-item">
+                    <span className="quickview-spec-icon"><BathIcon /></span>
+                    <span><strong>Baths:</strong> {bathrooms}</span>
+                  </div>
+                  <div className="quickview-spec-item">
+                    <span className="quickview-spec-icon"><AreaIcon /></span>
+                    <span><strong>Area:</strong> {area_sqft || '—'} sqft</span>
+                  </div>
+                  <div className="quickview-spec-item">
+                    <span className="quickview-spec-icon">🪑</span>
+                    <span><strong>Furnishing:</strong> {furnishing?.replace(/-/g, ' ')}</span>
+                  </div>
+                  <div className="quickview-spec-item">
+                    <span className="quickview-spec-icon">🚗</span>
+                    <span><strong>Parking:</strong> {parking?.replace(/-/g, ' ') || '—'}</span>
+                  </div>
                 </div>
 
                 <div className="quickview-desc">
-                  <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '6px' }}>Overview</h3>
-                  <p style={{ fontSize: '0.875rem', color: '#64748b', lineHeight: '1.5', maxHeight: '80px', overflowY: 'auto' }}>
+                  <h3>Overview</h3>
+                  <p>
                     {description || 'No description provided.'}
                   </p>
                 </div>
 
-                <div className="quickview-owner" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
-                  <h4 style={{ fontSize: '0.938rem', fontWeight: '600', marginBottom: '6px' }}>Landlord Details</h4>
-                  <p style={{ fontSize: '0.875rem', color: '#475569' }}><strong>Name:</strong> {owner_name || 'Owner'}</p>
-                  {isAuthenticated ? (
-                    <p style={{ fontSize: '0.875rem', color: '#475569', marginTop: '4px' }}><strong>Contact:</strong> {owner_phone || 'Not Shared'}</p>
-                  ) : (
-                    <p style={{ fontStyle: 'italic', fontSize: '0.813rem', color: '#64748b', marginTop: '4px' }}>Please login to view contact details</p>
-                  )}
+                <div className="quickview-owner">
+                  <div className="quickview-owner-avatar">
+                    {owner_name ? owner_name.charAt(0).toUpperCase() : 'O'}
+                  </div>
+                  <div className="quickview-owner-info">
+                    <h4>{owner_name || 'Owner'}</h4>
+                    {isAuthenticated ? (
+                      <span>{owner_phone || 'Contact not shared'}</span>
+                    ) : (
+                      <span>Please login to view contact</span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="quickview-actions" style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <div className="quickview-actions-row">
                   <button 
                     className="btn btn-primary"
                     onClick={() => {
                       setIsQuickViewOpen(false);
-                      onPropertyClick ? onPropertyClick(id) : navigate(`/property/${id}`);
+                      handleCardClick();
                     }}
-                    style={{ width: '100%', padding: '12px', borderRadius: '10px' }}
                   >
                     View Full Details
                   </button>

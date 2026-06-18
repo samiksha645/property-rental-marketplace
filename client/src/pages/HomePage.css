@@ -413,8 +413,8 @@
   font-weight: 500;
 }
 
-/* ===== PROPERTIES GRID ===== */
-.properties-grid {
+/* ===== PROPERTIES GRID (Homepage) ===== */
+.homepage .properties-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 28px;
