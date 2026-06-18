@@ -743,6 +743,61 @@
   gap: 20px;
 }
 
+/* ===== BOOKING FORM ===== */
+.booking-form-group {
+  margin-bottom: 12px;
+}
+
+.booking-form-group label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #5a5a6e;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.booking-form-group input,
+.booking-form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #f0f0f8;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  color: #111118;
+  background: white;
+  transition: all 0.2s ease;
+  appearance: auto;
+}
+
+.booking-form-group input:focus,
+.booking-form-group select:focus {
+  border-color: #c9a84c;
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.1);
+  outline: none;
+}
+
+.booking-msg {
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-size: 0.813rem;
+  font-weight: 500;
+}
+
+.booking-msg.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.booking-msg.success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
 /* ===== RESPONSIVE: MOBILE-FIRST BREAKPOINTS ===== */
 
 /* Tablet & below: stack layout */
